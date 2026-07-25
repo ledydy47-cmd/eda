@@ -101,11 +101,206 @@ function recipeToListItem(recipe) {
   };
 }
 
+function normalizeIngredientName(name = '') {
+  return name.toLowerCase().replace(/ё/g, 'е');
+}
+
+function roundAmount(n) {
+  return Number.isInteger(n) ? n : Math.round(n * 10) / 10;
+}
+
+function formatFractionValue(n) {
+  const whole = Math.floor(n);
+  const frac = Math.round((n - whole) * 4) / 4;
+  const symbols = { 0.25: '¼', 0.5: '½', 0.75: '¾' };
+  if (whole && frac) return `${whole}${symbols[frac] || ''}`;
+  if (whole) return `${whole}`;
+  return symbols[frac] || String(roundAmount(n)).replace('.', ',');
+}
+
+function formatSpoonAmount(grams, tspWeight, tbspWeight) {
+  if (tbspWeight && grams >= tbspWeight * 0.65) {
+    const tbsp = grams / tbspWeight;
+    const rounded = Math.round(tbsp * 4) / 4;
+    if (rounded >= 1) return `${formatFractionValue(rounded)} ст. л.`;
+  }
+  const tsp = grams / tspWeight;
+  const rounded = Math.round(tsp * 4) / 4;
+  if (rounded <= 0) return 'щепотка';
+  return `${formatFractionValue(rounded)} ч. л.`;
+}
+
+function formatPinches(grams) {
+  const count = Math.max(1, Math.round(grams));
+  if (count === 1) return 'щепотка';
+  if (count >= 2 && count <= 4) return `${count} щепотки`;
+  return `${count} щепоток`;
+}
+
+function formatEggAmount(grams) {
+  const count = grams / 55;
+  const rounded = Math.round(count * 2) / 2;
+  if (rounded === 1) return '1 шт.';
+  if (Number.isInteger(rounded)) return `${rounded} шт.`;
+  return `${formatFractionValue(rounded)} шт.`;
+}
+
+function formatGarlicAmount(grams) {
+  const count = Math.max(0.5, Math.round((grams / 5) * 2) / 2);
+  if (count === 1) return '1 зубчик';
+  if (Number.isInteger(count)) return `${count} зубчика`;
+  return `${formatFractionValue(count)} зубчика`;
+}
+
+function formatGlassAmount(ml) {
+  const glasses = ml / 200;
+  const rounded = Math.round(glasses * 4) / 4;
+  if (rounded === 1) return '1 стакан';
+  if (rounded < 1) return `${formatFractionValue(rounded)} стакана`;
+  const mod10 = rounded % 10;
+  const mod1 = rounded % 1;
+  const word = Number.isInteger(rounded)
+    ? (mod10 >= 2 && mod10 <= 4 ? 'стакана' : 'стаканов')
+    : 'стакана';
+  return `${formatFractionValue(rounded)} ${word}`;
+}
+
+function formatTablespoonVolume(ml) {
+  const tbsp = Math.max(1, Math.round((ml / 15) * 2) / 2);
+  if (tbsp === 1) return '1 ст. л.';
+  return `${formatFractionValue(tbsp)} ст. л.`;
+}
+
+function formatMilkOrWater(name, ml) {
+  if (ml > 100) return formatGlassAmount(ml);
+  if (ml >= 15) return formatTablespoonVolume(ml);
+  return `${roundAmount(ml)} мл`;
+}
+
+function isGramsOnly(name) {
+  return /(курин|индейк|мяс|говяд|свин|рыб|лосос|тунец|треск|творог|хлебц|хлеб |^хлеб|овсян|манк|круп|макарон|мюсли|греч|перлов|булгур)/.test(normalizeIngredientName(name))
+    && !/творожн/.test(normalizeIngredientName(name));
+}
+
+function isYogurtOrKefir(name) {
+  return /(йогурт|кефир)/i.test(name);
+}
+
+function getProduceHint(name, grams) {
+  const n = normalizeIngredientName(name);
+  const items = [
+    { match: /яблок/, refG: 150, single: '1 среднее яблоко', part: 'среднего яблока' },
+    { match: /огур/, refG: 100, single: '1 средний огурец', part: 'среднего огурца' },
+    { match: /помидор|томат/, refG: 90, single: '1 средний помидор', part: 'среднего помидора' },
+    { match: /банан/, refG: 140, single: '1 банан', part: 'банана', halfAt: 70, halfLabel: '½ банана' },
+  ];
+
+  const item = items.find(entry => entry.match.test(n));
+  if (!item) return null;
+
+  if (item.halfAt && Math.abs(grams - item.halfAt) <= 8) {
+    return `${item.halfLabel} ≈ ${item.halfAt} г`;
+  }
+
+  const ratio = grams / item.refG;
+  if (Math.abs(ratio - 1) <= 0.12) return `${item.single} ≈ ${item.refG} г`;
+
+  if (Math.abs(ratio - 0.5) <= 0.1) {
+    return `½ ${item.part} ≈ ${Math.round(item.refG / 2)} г`;
+  }
+
+  const rounded = Math.round(ratio * 4) / 4;
+  if (rounded > 0 && rounded < 2) {
+    return `≈ ${formatFractionValue(rounded)} ${item.part}`;
+  }
+
+  return null;
+}
+
+function isProduce(name) {
+  return /(яблок|огур|помидор|томат|банан|перец болгар|морков|лук(?!ов)|салат)/i.test(name);
+}
+
 function formatIngredientAmount(ing, portions = 1) {
   if (!ing.amount) return 'по вкусу';
+
+  const name = ing.name || '';
+  const n = normalizeIngredientName(name);
+  const unit = (ing.unit || 'г').toLowerCase();
   const amount = ing.amount * portions;
-  const value = Number.isInteger(amount) ? amount : Math.round(amount * 10) / 10;
-  return `${value} ${ing.unit}`;
+  const grams = unit === 'мл' ? amount : amount;
+  const ml = unit === 'мл' ? amount : amount;
+
+  if (/яйц/.test(n)) {
+    return formatEggAmount(grams);
+  }
+
+  if (/чеснок/.test(n)) {
+    return formatGarlicAmount(grams);
+  }
+
+  if (/^соль|соль,|соль /.test(n) || (n.includes('соль') && !/бульон/.test(n))) {
+    if (grams <= 1.5) return 'щепотка';
+    if (grams <= 2.5) return '¼ ч. л.';
+    return formatSpoonAmount(grams, 2, null);
+  }
+
+  if (/корица|ванилин/.test(n)) {
+    return formatPinches(grams);
+  }
+
+  if (/мёд|мед/.test(n)) {
+    return formatSpoonAmount(grams, 7, 21);
+  }
+
+  if (/^сахар/.test(n) || n === 'сахар') {
+    return formatSpoonAmount(grams, 5, null);
+  }
+
+  if (/горчиц/.test(n)) {
+    return formatSpoonAmount(grams, 5, null);
+  }
+
+  if (/сливочн/.test(n) && /масл/.test(n)) {
+    return formatSpoonAmount(grams, 5, null);
+  }
+
+  if (/растительн/.test(n) && /масл/.test(n)) {
+    return formatSpoonAmount(grams, 4, 12);
+  }
+
+  if (/^молоко|^вода/.test(n) || n.startsWith('молоко ') || n === 'вода') {
+    const volume = unit === 'мл' ? ml : ml;
+    return formatMilkOrWater(name, volume);
+  }
+
+  if (isYogurtOrKefir(name)) {
+    return `${roundAmount(grams)} мл`;
+  }
+
+  if (isGramsOnly(name)) {
+    return `${roundAmount(grams)} г`;
+  }
+
+  if (isProduce(name)) {
+    const hint = getProduceHint(name, grams);
+    const base = `${roundAmount(grams)} г`;
+    return hint ? `${base} (${hint})` : base;
+  }
+
+  if (unit === 'мл') {
+    return `${roundAmount(ml)} мл`;
+  }
+
+  if (unit === 'ч.л.') {
+    return `${roundAmount(amount)} ч. л.`;
+  }
+
+  if (unit === 'ст.л.') {
+    return `${roundAmount(amount)} ст. л.`;
+  }
+
+  return `${roundAmount(grams)} ${ing.unit || 'г'}`;
 }
 
 function getDislikedRecipes() {
