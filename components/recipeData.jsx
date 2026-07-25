@@ -61,6 +61,11 @@ const SNACK_REPLACE_POOL = [
 
 const RECIPE_IMAGES = {
   breakfast_regular_300kcal_001: 'assets/recipes/breakfast-omelet-pepper.png',
+  breakfast_regular_300kcal_011: 'assets/recipes/breakfast-turkey-toast-011.png',
+  breakfast_regular_300kcal_012: 'assets/recipes/breakfast-fish-cakes-012.png',
+  breakfast_regular_300kcal_013: 'assets/recipes/breakfast-shakshuka-013.png',
+  breakfast_regular_300kcal_014: 'assets/recipes/breakfast-tvorog-oats-014.png',
+  breakfast_regular_300kcal_015: 'assets/recipes/breakfast-liver-toast-015.png',
 };
 
 function enrichRecipe(recipe) {
@@ -139,7 +144,9 @@ function formatPinches(grams) {
 
 function formatEggAmount(grams) {
   const count = grams / 55;
-  const rounded = Math.round(count * 2) / 2;
+  const rounded = Math.abs(count - Math.round(count)) < 0.2
+    ? Math.round(count)
+    : Math.round(count * 2) / 2;
   if (rounded === 1) return '1 шт.';
   if (Number.isInteger(rounded)) return `${rounded} шт.`;
   return `${formatFractionValue(rounded)} шт.`;
