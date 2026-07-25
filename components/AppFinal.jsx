@@ -30,6 +30,9 @@ function FloraeApp() {
   const [reward, setReward] = React.useState(false);
   const [replaceOpen, setReplaceOpen] = React.useState(false);
   const [replaceMealKey, setReplaceMealKey] = React.useState('breakfast');
+  const [catalogOpen, setCatalogOpen] = React.useState(false);
+  const [catalogMealKey, setCatalogMealKey] = React.useState('breakfast');
+  const [previewRecipe, setPreviewRecipe] = React.useState(null);
   const [activeRecipeKey, setActiveRecipeKey] = React.useState('breakfast');
   const [breakfastRecipes, setBreakfastRecipes] = React.useState([]);
   const [recipesLoading, setRecipesLoading] = React.useState(true);
@@ -93,8 +96,8 @@ function FloraeApp() {
   );
 
   const activeRecipe = React.useMemo(
-    () => RecipeData.selectionToRecipe(activeRecipeKey, mealSelections[activeRecipeKey], breakfastRecipeFull),
-    [activeRecipeKey, mealSelections, breakfastRecipeFull]
+    () => previewRecipe || RecipeData.selectionToRecipe(activeRecipeKey, mealSelections[activeRecipeKey], breakfastRecipeFull),
+    [previewRecipe, activeRecipeKey, mealSelections, breakfastRecipeFull]
   );
 
   const sheetRecipe = React.useMemo(
@@ -142,9 +145,35 @@ function FloraeApp() {
     setReplaceOpen(true);
   };
 
+  const openCatalog = (mealKey) => {
+    setCatalogMealKey(mealKey);
+    setCatalogOpen(true);
+    setReplaceOpen(false);
+  };
+
   const openRecipe = (mealKey) => {
+    setPreviewRecipe(null);
     setActiveRecipeKey(mealKey);
     goto('recipe');
+  };
+
+  const openRecipePreview = (listItem) => {
+    if (catalogMealKey === 'breakfast') {
+      const full = RecipeData.findRecipeById(breakfastRecipes, listItem.id);
+      if (full) {
+        setPreviewRecipe(full);
+        setActiveRecipeKey('breakfast');
+        setCatalogOpen(false);
+        goto('recipe');
+      }
+      return;
+    }
+    openRecipe(catalogMealKey);
+  };
+
+  const handleRecipeBack = () => {
+    setPreviewRecipe(null);
+    goto('meals');
   };
 
   const openMealSheet = (mealKey) => {
@@ -153,7 +182,7 @@ function FloraeApp() {
   };
 
   const applyReplacement = (recipe) => {
-    const mealKey = replaceMealKey;
+    const mealKey = replaceMealKey || catalogMealKey;
     const poolItem = RecipeData.findPoolItem(mealKey, recipe.id, breakfastPool);
     setMealSelections(prev => {
       const next = {
@@ -176,8 +205,15 @@ function FloraeApp() {
       });
       return next;
     });
+    setPreviewRecipe(null);
     setReplaceOpen(false);
+    setCatalogOpen(false);
     setSheet(null);
+  };
+
+  const applyCatalogSelection = (recipe) => {
+    setReplaceMealKey(catalogMealKey);
+    applyReplacement(recipe);
   };
 
   React.useEffect(() => {
@@ -187,6 +223,7 @@ function FloraeApp() {
   }, [breakfastRecipeFull?.id]);
 
   const replacePool = RecipeData.getReplacePool(replaceMealKey, breakfastPool);
+  const catalogPool = RecipeData.getReplacePool(catalogMealKey, breakfastPool);
   const replaceCurrentId = mealSelections[replaceMealKey]?.id;
   const replaceCurrentTitle = dayMeals.find(m => m.mealKey === replaceMealKey)?.title || '';
   const replaceMealLabel = RecipeData.getMealLabel(replaceMealKey);
@@ -219,12 +256,14 @@ function FloraeApp() {
         dayMeals={dayMeals}
         mealsDone={mealsDone}
         breakfastLoading={recipesLoading}
+        breakfastCount={breakfastRecipes.length}
         onToggleMealDone={toggleMealDone}
         onOpenRecipe={openRecipe}
-        onReplaceMeal={openReplace}/>;
+        onReplaceMeal={openReplace}
+        onBrowseMeals={openCatalog}/>;
       case 'recipe': return <RecipeScreen t={t}
         recipe={activeRecipe}
-        onBack={() => goto('meals')}
+        onBack={handleRecipeBack}
         onDone={completeTask}
         onReplace={() => openReplace(activeRecipeKey)}/>;
       case 'workout-overview': return <WorkoutOverviewScreen t={t} onStart={() => goto('workout')} onBack={() => goto('today')}/>;
@@ -273,7 +312,17 @@ function FloraeApp() {
                 pool={replacePool}
                 mealLabel={replaceMealLabel}
                 onClose={() => setReplaceOpen(false)}
-                onSelect={applyReplacement}/>
+                onSelect={applyReplacement}
+                onBrowseAll={replaceMealKey === 'breakfast' ? () => openCatalog('breakfast') : undefined}/>
+            )}
+            {catalogOpen && (
+              <MealCatalogSheet t={t}
+                pool={catalogPool}
+                mealLabel={RecipeData.getMealLabel(catalogMealKey)}
+                currentId={mealSelections[catalogMealKey]?.id}
+                onClose={() => setCatalogOpen(false)}
+                onPreview={openRecipePreview}
+                onSelect={applyCatalogSelection}/>
             )}
             {reward && <RewardOverlay t={t} onClose={() => setReward(false)}/>}
           </div>

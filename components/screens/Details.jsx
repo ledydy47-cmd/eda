@@ -36,8 +36,107 @@ const DEFAULT_DINNER_RECIPE = {
   ],
 };
 
+// ─── Каталог всех рецептов приёма пищи ─────────────
+function MealCatalogSheet({t, pool = [], mealLabel = 'ЗАВТРАК', currentId, onClose, onPreview, onSelect}) {
+  return (
+    <div style={{
+      position: 'absolute', inset: 0, zIndex: 26,
+      display: 'flex', flexDirection: 'column',
+      background: 'rgba(0,0,0,0.45)',
+      animation: 'fadeIn 0.2s',
+    }} onClick={onClose}>
+      <div style={{flex: 1}} onClick={onClose}/>
+      <div onClick={e => e.stopPropagation()} style={{
+        background: t.bg,
+        borderTopLeftRadius: t.radius.xl,
+        borderTopRightRadius: t.radius.xl,
+        padding: '10px 0 0',
+        maxHeight: '92%',
+        animation: 'slideUp 0.3s cubic-bezier(0.2, 0.9, 0.3, 1)',
+        display: 'flex',
+        flexDirection: 'column',
+        minHeight: 0,
+      }}>
+        <div style={{width: 40, height: 4, borderRadius: 2, background: t.borderStrong, margin: '0 auto 12px', flexShrink: 0}}/>
+
+        <div style={{padding: '0 24px 12px', flexShrink: 0}}>
+          <div style={{fontFamily: '"JetBrains Mono", monospace', fontSize: 10, color: t.textMuted, letterSpacing: '0.14em'}}>
+            КАТАЛОГ · {mealLabel}
+          </div>
+          <Display t={t} size={22} style={{marginTop: 6}}>
+            Все рецепты
+          </Display>
+          <p style={{marginTop: 6, fontSize: 13, color: t.textMuted, lineHeight: 1.45}}>
+            {pool.length} вариантов — нажми «Посмотреть», чтобы открыть полный рецепт с фото и шагами.
+          </p>
+        </div>
+
+        <div style={{flex: 1, minHeight: 0, overflow: 'auto', padding: '0 20px 8px', WebkitOverflowScrolling: 'touch'}}>
+          {pool.length === 0 ? (
+            <div style={{padding: 24, textAlign: 'center', color: t.textMuted, fontSize: 14}}>
+              Рецепты ещё загружаются…
+            </div>
+          ) : pool.map(recipe => {
+            const isCurrent = recipe.id === currentId;
+            return (
+              <div key={recipe.id} style={{
+                padding: 14, borderRadius: t.radius.lg,
+                background: isCurrent ? t.accentSoft : t.surface,
+                border: `1px solid ${isCurrent ? t.accent : t.border}`,
+                marginBottom: 10,
+              }}>
+                <div style={{display: 'flex', gap: 12, alignItems: 'center'}}>
+                  <PhotoSlot t={t} w={72} h={72} radius={t.radius.md} label={recipe.tag} tone={recipe.tone} src={recipe.image} alt={recipe.title} style={{flexShrink: 0}}/>
+                  <div style={{flex: 1, minWidth: 0}}>
+                    {isCurrent && (
+                      <div style={{fontSize: 10, fontWeight: 700, color: t.accent, letterSpacing: '0.06em', marginBottom: 4}}>СЕЙЧАС В ПЛАНЕ</div>
+                    )}
+                    <div style={{fontSize: 15, fontWeight: 600, color: t.text, lineHeight: 1.25}}>{recipe.title}</div>
+                    <div style={{fontSize: 12.5, color: t.textMuted, marginTop: 4}}>{recipe.kcal} ккал · {recipe.time}</div>
+                  </div>
+                </div>
+                <div style={{display: 'flex', gap: 8, marginTop: 12}}>
+                  <button onClick={() => onPreview && onPreview(recipe)} style={{
+                    flex: 1.4, padding: '10px 12px', borderRadius: t.radius.md,
+                    background: t.bgSubtle, border: `1px solid ${t.border}`,
+                    color: t.text, fontSize: 13, fontWeight: 600, cursor: 'pointer',
+                    fontFamily: t.fontBody,
+                  }}>
+                    Посмотреть
+                  </button>
+                  {onSelect && (
+                    <button onClick={() => onSelect(recipe)} style={{
+                      flex: 1, padding: '10px 12px', borderRadius: t.radius.md,
+                      background: t.accent, border: 'none',
+                      color: t.accentText, fontSize: 13, fontWeight: 600, cursor: 'pointer',
+                      fontFamily: t.fontBody,
+                    }}>
+                      Выбрать
+                    </button>
+                  )}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+
+        <div style={{padding: '12px 24px calc(16px + env(safe-area-inset-bottom, 0px))', borderTop: `1px solid ${t.border}`, flexShrink: 0}}>
+          <button onClick={onClose} style={{
+            width: '100%', padding: '14px', borderRadius: t.radius.md,
+            background: 'transparent', border: `1.5px solid ${t.border}`,
+            color: t.text, fontSize: 14, fontWeight: 600, cursor: 'pointer',
+            fontFamily: t.fontBody,
+          }}>
+            Закрыть
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ─── Замена блюда — 3 альтернативы ─────────────
-function ReplaceMealSheet({t, currentTitle, currentId, pool = DINNER_RECIPE_POOL, mealLabel = 'УЖИН', onClose, onSelect}) {
+function ReplaceMealSheet({t, currentTitle, currentId, pool = DINNER_RECIPE_POOL, mealLabel = 'УЖИН', onClose, onSelect, onBrowseAll}) {
   const [options, setOptions] = React.useState(() => RecipeData.getAvailableAlternatives(pool, currentId).slice(0, 3));
   const [applied, setApplied] = React.useState(false);
   const [selectedTitle, setSelectedTitle] = React.useState('');
@@ -112,7 +211,7 @@ function ReplaceMealSheet({t, currentTitle, currentId, pool = DINNER_RECIPE_POOL
               marginBottom: 10,
             }}>
               <div style={{display: 'flex', gap: 12, alignItems: 'center'}}>
-                <PhotoSlot t={t} w={72} h={72} radius={t.radius.md} label={recipe.tag} tone={recipe.tone} style={{flexShrink: 0}}/>
+                <PhotoSlot t={t} w={72} h={72} radius={t.radius.md} label={recipe.tag} tone={recipe.tone} src={recipe.image} alt={recipe.title} style={{flexShrink: 0}}/>
                 <div style={{flex: 1, minWidth: 0}}>
                   <div style={{fontSize: 15, fontWeight: 600, color: t.text, lineHeight: 1.25}}>{recipe.title}</div>
                   <div style={{fontSize: 12.5, color: t.textMuted, marginTop: 4}}>{recipe.kcal} ккал · {recipe.time}</div>
@@ -141,6 +240,16 @@ function ReplaceMealSheet({t, currentTitle, currentId, pool = DINNER_RECIPE_POOL
         </div>
 
         <div style={{padding: '12px 24px calc(16px + env(safe-area-inset-bottom, 0px))', borderTop: `1px solid ${t.border}`}}>
+          {!applied && onBrowseAll && pool.length > 3 && (
+            <button onClick={onBrowseAll} style={{
+              width: '100%', padding: '12px', borderRadius: t.radius.md,
+              background: t.accentSoft, border: 'none',
+              color: t.accent, fontSize: 13, fontWeight: 600, cursor: 'pointer',
+              fontFamily: t.fontBody, marginBottom: 10,
+            }}>
+              Смотреть все {pool.length} рецептов
+            </button>
+          )}
           <button onClick={onClose} style={{
             width: '100%', padding: '14px', borderRadius: t.radius.md,
             background: 'transparent', border: `1.5px solid ${t.border}`,
@@ -699,6 +808,7 @@ function RewardOverlay({t, onClose}) {
 }
 
 window.MealSheet = MealSheet;
+window.MealCatalogSheet = MealCatalogSheet;
 window.ReplaceMealSheet = ReplaceMealSheet;
 window.RecipeScreen = RecipeScreen;
 window.DINNER_RECIPE_POOL = DINNER_RECIPE_POOL;

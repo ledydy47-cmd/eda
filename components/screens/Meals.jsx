@@ -35,8 +35,10 @@ function MealsScreen({
   mealsDone = {},
   onOpenRecipe,
   onReplaceMeal,
+  onBrowseMeals,
   onToggleMealDone,
   breakfastLoading = false,
+  breakfastCount = 0,
 }) {
   const plan = RecipeData.sumDayNutrients(dayMeals, mealsDone, false);
   const eaten = RecipeData.sumDayNutrients(dayMeals, mealsDone, true);
@@ -155,6 +157,31 @@ function MealsScreen({
             </div>
           );
         })}
+
+        {!breakfastLoading && onBrowseMeals && breakfastCount > 0 && (
+          <button
+            type="button"
+            onClick={() => onBrowseMeals('breakfast')}
+            style={{
+              width: '100%', padding: '14px 16px', borderRadius: t.radius.lg,
+              background: t.accentSoft, border: `1px solid ${t.accent}33`,
+              display: 'flex', alignItems: 'center', gap: 12,
+              cursor: 'pointer', marginBottom: 10, fontFamily: t.fontBody,
+            }}
+          >
+            <div style={{
+              width: 40, height: 40, borderRadius: 12,
+              background: t.accent, display: 'flex', alignItems: 'center', justifyContent: 'center',
+            }}>
+              <Icon name="meal" size={18} stroke={t.accentText}/>
+            </div>
+            <div style={{flex: 1, textAlign: 'left'}}>
+              <div style={{fontSize: 14, fontWeight: 600, color: t.text}}>Все завтраки</div>
+              <div style={{fontSize: 12, color: t.textMuted, marginTop: 2}}>{breakfastCount} рецептов с фото и КБЖУ</div>
+            </div>
+            <Icon name="chevronR" size={18} stroke={t.accent}/>
+          </button>
+        )}
 
         <div style={{
           marginTop: 16, padding: 16, borderRadius: t.radius.lg,
