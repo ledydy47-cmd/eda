@@ -25,7 +25,7 @@
 
   body {
     margin: 0;
-    min-height: 100%;
+    height: 100%;
     min-height: 100dvh;
     font-family: 'Inter', system-ui, -apple-system, sans-serif;
     background: #faf9f6;
@@ -36,9 +36,19 @@
   }
 
   #root {
+    height: 100dvh;
     min-height: 100dvh;
     display: flex;
     flex-direction: column;
+  }
+
+  .boot-loader {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: oklch(50% 0.02 50);
+    font-size: 15px;
   }
 
   button, input, select, textarea {
@@ -53,6 +63,7 @@
     flex: 1;
     display: flex;
     flex-direction: column;
+    height: 100dvh;
     min-height: 100dvh;
     width: 100%;
     max-width: 480px;
@@ -77,8 +88,20 @@
     flex: 1;
     display: flex;
     flex-direction: column;
+    height: 100%;
     min-height: 0;
     padding-top: env(safe-area-inset-top, 0px);
+  }
+
+  .app-screen {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    overflow: hidden;
+    min-height: 0;
+    width: 100%;
+    -webkit-overflow-scrolling: touch;
   }
 
   /* Нижняя навигация */
@@ -109,7 +132,7 @@
   }
 
   /* Скролл внутри экранов */
-  .app-shell__inner > div {
+  .app-screen > div:first-child {
     -webkit-overflow-scrolling: touch;
   }
 
@@ -130,7 +153,8 @@
 </style>
 </head>
 <body>
-  <div id="root"></div>
+  <div id="root"><div class="boot-loader">Загрузка…</div></div>
+  <noscript><p style="padding:24px;text-align:center">Для работы florae нужен JavaScript.</p></noscript>
 
   <script src="https://unpkg.com/react@18.3.1/umd/react.production.min.js" crossorigin="anonymous"></script>
   <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js" crossorigin="anonymous"></script>

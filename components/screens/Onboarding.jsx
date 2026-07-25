@@ -2,7 +2,7 @@
 
 // ─────────────────────────────────────────────────────────
 // 1. SPLASH
-function SplashScreen({t, onNext}) {
+function SplashScreen({t, onNext, onLogin}) {
   const isWarm = t.tag === 'Warm Editorial';
   const isPlayful = t.tag === 'Bold Playful';
   const isClean = t.tag === 'Clean Premium';
@@ -58,7 +58,12 @@ function SplashScreen({t, onNext}) {
         Начать
       </Button>
       <div style={{textAlign: 'center', marginTop: 14, fontSize: 14, color: t.textMuted}}>
-        Уже есть аккаунт? <span style={{color: t.text, fontWeight: 600, textDecoration: 'underline', textUnderlineOffset: 3}}>Войти</span>
+        Уже есть аккаунт?{' '}
+        <button type="button" onClick={onLogin} style={{
+          background: 'none', border: 'none', padding: 0,
+          color: t.text, fontWeight: 600, textDecoration: 'underline',
+          textUnderlineOffset: 3, cursor: 'pointer', fontSize: 'inherit',
+        }}>Войти</button>
       </div>
     </div>
   );
