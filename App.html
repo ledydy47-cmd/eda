@@ -59,37 +59,21 @@
     height: 100dvh;
   }
 
-  .dev-nav-toggle {
-    position: absolute;
-    top: max(10px, env(safe-area-inset-top));
-    left: 10px;
-    z-index: 50;
-    padding: 8px 12px;
-    border-radius: 999px;
-    border: 1px solid oklch(88% 0.005 60);
-    background: rgba(255, 255, 255, 0.92);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
-    font-size: 12px;
-    font-weight: 600;
-    color: oklch(30% 0.02 50);
-    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
-    touch-action: manipulation;
-  }
-
-  .dev-nav-backdrop {
-    display: none;
+  .dev-nav-toggle,
+  .dev-nav-backdrop,
+  .dev-nav__close {
+    display: none !important;
   }
 
   .dev-nav {
-    width: 272px;
+    width: 260px;
     flex-shrink: 0;
     background: #fff;
     border-right: 1px solid oklch(92% 0.005 60);
     display: flex;
     flex-direction: column;
     overflow: hidden;
-    z-index: 100;
+    height: 100dvh;
   }
 
   .dev-nav__header {
@@ -277,33 +261,16 @@
 
   @media (max-width: 899px) {
     .dev-nav {
-      position: fixed;
-      left: 0;
-      top: 0;
-      bottom: 0;
-      box-shadow: 8px 0 32px rgba(0, 0, 0, 0.12);
+      width: 220px;
     }
 
-    .dev-nav-backdrop {
-      display: block;
-      position: fixed;
-      inset: 0;
-      background: rgba(0, 0, 0, 0.35);
-      z-index: 99;
-    }
-
-    .dev-nav__close {
-      display: flex;
-      align-items: center;
-      justify-content: center;
+    .dev-nav__item {
+      font-size: 11px;
+      padding: 7px 8px;
     }
   }
 
   @media (min-width: 900px) {
-    .dev-layout:not(:has(.dev-nav)) .dev-nav-toggle {
-      left: 10px;
-    }
-
     .dev-layout__main .app-shell {
       max-width: 420px;
     }

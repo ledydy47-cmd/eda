@@ -77,21 +77,24 @@ function ValueSliderScreen({t, onNext, slideIndex = 0, onSlideChange}) {
       kicker: 'ПИТАНИЕ',
       title: 'Готовое меню\nна каждый день',
       body: 'Никаких расчётов и подсчёта калорий. Только вкусные рецепты, подобранные под твои цели и вкусы.',
-      photo: 'фото · тарелка с боулом',
+      src: 'assets/onboarding/slide-meals.png',
+      alt: 'Тарелка с полезным боулом',
       tone: 'warm',
     },
     {
       kicker: 'ДВИЖЕНИЕ И УХОД',
       title: 'Спорт и красота —\nв одном ритме',
       body: 'Короткие тренировки дома, уходовые ритуалы и практики — всё синхронизировано с твоим циклом.',
-      photo: 'фото · спокойная девушка на коврике',
+      src: 'assets/onboarding/slide-workout.png',
+      alt: 'Спокойная тренировка дома на коврике',
       tone: 'green',
     },
     {
       kicker: 'РЕЗУЛЬТАТ',
       title: '127 000 женщин\nуже нашли свой ритм',
       body: 'Средний результат за 30 дней: −4.8 кг и стабильное самочувствие без стресса и запретов.',
-      photo: 'фото · портрет · улыбка',
+      src: 'assets/onboarding/slide-community.png',
+      alt: 'Улыбающаяся женщина',
       tone: 'lavender',
     },
   ];
@@ -108,7 +111,7 @@ function ValueSliderScreen({t, onNext, slideIndex = 0, onSlideChange}) {
       </div>
 
       {/* Фото */}
-      <PhotoSlot t={t} h={360} radius={t.radius.xl} label={s.photo} tone={s.tone}/>
+      <PhotoSlot t={t} h={360} radius={t.radius.xl} src={s.src} alt={s.alt} tone={s.tone}/>
 
       {/* Текст */}
       <div style={{marginTop: 32}}>
@@ -403,12 +406,13 @@ function PaywallScreen({t, onNext, onBack}) {
   const [plan, setPlan] = React.useState('year');
   const plans = [
     {
-      id: 'week',
-      title: '7 дней',
-      price: '149 ₽',
-      hook: 'Попробуй без риска',
-      perDay: null,
-      size: 'sm',
+      id: 'year',
+      title: '1 год',
+      price: '1 990 ₽',
+      hook: 'Экономишь 2 890 ₽',
+      perDay: '5 ₽/день — дешевле чашки чая',
+      badge: '−58%',
+      size: 'lg',
     },
     {
       id: 'month',
@@ -419,13 +423,12 @@ function PaywallScreen({t, onNext, onBack}) {
       size: 'md',
     },
     {
-      id: 'year',
-      title: '1 год',
-      price: '1 990 ₽',
-      hook: 'Экономишь 2 890 ₽',
-      perDay: '5 ₽/день — дешевле чашки чая',
-      badge: '−58%',
-      size: 'lg',
+      id: 'week',
+      title: '7 дней',
+      price: '149 ₽',
+      hook: 'Попробуй без риска',
+      perDay: null,
+      size: 'sm',
     },
   ];
 

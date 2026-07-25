@@ -1,7 +1,7 @@
 // Общие UI-примитивы: плейсхолдеры изображений, иконки, кнопки
 
 // Полосатый placeholder для фото — с подписью того, что там должно быть
-function PhotoSlot({t, w = '100%', h = 200, radius, label, tone = 'neutral', style = {}, children}) {
+function PhotoSlot({t, w = '100%', h = 200, radius, label, tone = 'neutral', style = {}, children, src, alt = ''}) {
   const tones = {
     neutral: {a: 'oklch(88% 0.02 60)', b: 'oklch(83% 0.025 60)', fg: 'oklch(35% 0.02 60)'},
     warm:    {a: 'oklch(87% 0.04 45)', b: 'oklch(80% 0.06 40)', fg: 'oklch(30% 0.05 40)'},
@@ -12,6 +12,26 @@ function PhotoSlot({t, w = '100%', h = 200, radius, label, tone = 'neutral', sty
   };
   const c = tones[tone] || tones.neutral;
   const r = radius ?? t.radius.md;
+
+  if (src) {
+    return (
+      <div style={{
+        width: w, height: h,
+        borderRadius: r,
+        position: 'relative', overflow: 'hidden',
+        background: c.a,
+        ...style,
+      }}>
+        <img
+          src={src}
+          alt={alt || label || ''}
+          style={{width: '100%', height: '100%', objectFit: 'cover', display: 'block'}}
+        />
+        {children}
+      </div>
+    );
+  }
+
   return (
     <div style={{
       width: w, height: h,

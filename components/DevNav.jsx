@@ -39,7 +39,7 @@ const DEV_COLORS = {
   green: 'oklch(58% 0.11 155)',
 };
 
-function DevNav({screenId, setScreenId, onClose, onOpenSheet, onOpenReplace, onOpenReward}) {
+function DevNav({screenId, setScreenId, onOpenSheet, onOpenReplace, onOpenReward}) {
   const allScreens = DEV_FLOW.flatMap(g => g.items);
   const idx = allScreens.findIndex(s => s.id === screenId);
 
@@ -50,7 +50,6 @@ function DevNav({screenId, setScreenId, onClose, onOpenSheet, onOpenReplace, onO
           <div className="dev-nav__title">florae · dev</div>
           <div className="dev-nav__subtitle">Переключение экранов</div>
         </div>
-        <button type="button" className="dev-nav__close" onClick={onClose} aria-label="Закрыть меню">×</button>
       </div>
 
       <div className="dev-nav__current">
@@ -88,7 +87,7 @@ function DevNav({screenId, setScreenId, onClose, onOpenSheet, onOpenReplace, onO
                   key={item.id}
                   type="button"
                   className={'dev-nav__item' + (on ? ' dev-nav__item--active' : '')}
-                  onClick={() => { setScreenId(item.id); onClose?.(); }}
+                  onClick={() => setScreenId(item.id)}
                 >
                   <span className="dev-nav__item-num">{String(num).padStart(2, '0')}</span>
                   <span>{item.label}</span>
