@@ -2,7 +2,62 @@
 
 const BREAKFAST_BATCH_URL = 'data/breakfast_regular_300kcal_batch_01.json';
 
-const DEFAULT_BREAKFAST_ID = 'breakfast_regular_300kcal_001';
+const MEAL_ORDER = ['breakfast', 'l', 's', 'd'];
+
+const MEAL_META = {
+  breakfast: { time: '08:00', tag: 'Завтрак', meal_type: 'завтрак' },
+  l: { time: '13:30', tag: 'Обед', meal_type: 'обед' },
+  s: { time: '16:00', tag: 'Перекус', meal_type: 'перекус' },
+  d: { time: '19:00', tag: 'Ужин', meal_type: 'ужин' },
+};
+
+const MEAL_STORAGE_KEYS = {
+  breakfast: 'florae_breakfast',
+  l: 'florae_meal_l',
+  s: 'florae_meal_s',
+  d: 'florae_dinner',
+};
+
+const DEFAULT_MEALS = {
+  breakfast: {
+    id: 'breakfast_regular_300kcal_001',
+    title: 'Пышный омлет с болгарским перцем и петрушкой',
+    kcal: 310, protein_g: 21, fat_g: 22.3, carbs_g: 7.1,
+    prep_time_min: 12, tone: 'warm', meal_type: 'завтрак',
+  },
+  l: {
+    id: 'lunch-soup-quinoa',
+    title: 'Куриный суп с киноа и зеленью',
+    kcal: 350, protein_g: 28, fat_g: 10, carbs_g: 38,
+    prep_time_min: 25, tone: 'green', meal_type: 'обед',
+  },
+  s: {
+    id: 'snack-apple-almond',
+    title: 'Яблоко и горсть миндаля',
+    kcal: 150, protein_g: 4, fat_g: 10, carbs_g: 12,
+    prep_time_min: 5, tone: 'coral', meal_type: 'перекус',
+  },
+  d: {
+    id: 'chicken-broccoli',
+    title: 'Куриная грудка с брокколи',
+    kcal: 320, protein_g: 38, fat_g: 8, carbs_g: 12,
+    prep_time_min: 25, tone: 'warm', meal_type: 'ужин',
+  },
+};
+
+const LUNCH_REPLACE_POOL = [
+  { id: 'lunch-soup-quinoa', title: 'Куриный суп с киноа и зеленью', kcal: 350, time: '25 мин', tone: 'green', tag: 'Обед', protein_g: 28, fat_g: 10, carbs_g: 38 },
+  { id: 'lunch-turkey-salad', title: 'Салат с индейкой и авокадо', kcal: 340, time: '15 мин', tone: 'green', tag: 'Обед', protein_g: 32, fat_g: 14, carbs_g: 18 },
+  { id: 'lunch-buckwheat-fish', title: 'Гречка с запечённой рыбой', kcal: 360, time: '30 мин', tone: 'warm', tag: 'Обед', protein_g: 30, fat_g: 9, carbs_g: 40 },
+  { id: 'lunch-lentil-stew', title: 'Чечевичное рагу с овощами', kcal: 330, time: '20 мин', tone: 'coral', tag: 'Обед', protein_g: 18, fat_g: 8, carbs_g: 45 },
+];
+
+const SNACK_REPLACE_POOL = [
+  { id: 'snack-apple-almond', title: 'Яблоко и горсть миндаля', kcal: 150, time: '5 мин', tone: 'coral', tag: 'Перекус', protein_g: 4, fat_g: 10, carbs_g: 12 },
+  { id: 'snack-yogurt-berries', title: 'Йогурт с ягодами', kcal: 140, time: '3 мин', tone: 'green', tag: 'Перекус', protein_g: 12, fat_g: 4, carbs_g: 16 },
+  { id: 'snack-cottage-fruit', title: 'Творог с фруктами', kcal: 160, time: '5 мин', tone: 'warm', tag: 'Перекус', protein_g: 16, fat_g: 5, carbs_g: 14 },
+  { id: 'snack-hummus-veggies', title: 'Хумус с овощами', kcal: 145, time: '5 мин', tone: 'green', tag: 'Перекус', protein_g: 5, fat_g: 9, carbs_g: 11 },
+];
 
 const RECIPE_IMAGES = {
   breakfast_regular_300kcal_001: 'assets/recipes/breakfast-omelet-pepper.png',
@@ -32,12 +87,15 @@ function mealTypeLabel(mealType) {
 function recipeToListItem(recipe) {
   return {
     id: recipe.id,
-    title: recipe.name,
-    kcal: recipe.calories,
-    time: `${recipe.prep_time_min} мин`,
-    tone: getRecipeTone(recipe),
-    tag: mealTypeLabel(recipe.meal_type),
+    title: recipe.name || recipe.title,
+    kcal: recipe.calories || recipe.kcal,
+    protein_g: recipe.protein_g,
+    fat_g: recipe.fat_g,
+    carbs_g: recipe.carbs_g,
+    time: recipe.time || (recipe.prep_time_min ? `${recipe.prep_time_min} мин` : '—'),
     prep_time_min: recipe.prep_time_min,
+    tone: recipe.tone || getRecipeTone(recipe),
+    tag: recipe.tag || mealTypeLabel(recipe.meal_type),
     meal_type: recipe.meal_type,
     image: recipe.image || RECIPE_IMAGES[recipe.id] || null,
   };
@@ -125,11 +183,121 @@ function toggleFavoriteRecipe(recipe) {
 }
 
 const DEFAULT_MEALS_DONE = {
-  breakfast: true,
-  l: true,
+  breakfast: false,
+  l: false,
   s: false,
   d: false,
 };
+
+function getAllMealSelections() {
+  const result = {};
+  for (const key of MEAL_ORDER) {
+    result[key] = getStoredMealSelection(MEAL_STORAGE_KEYS[key], DEFAULT_MEALS[key].id);
+  }
+  return result;
+}
+
+function saveMealSelectionByKey(mealKey, recipe) {
+  saveMealSelection(MEAL_STORAGE_KEYS[mealKey], recipe);
+}
+
+function listItemFromSelection(mealKey, selection, breakfastRecipeFull) {
+  const meta = MEAL_META[mealKey];
+  const fallback = DEFAULT_MEALS[mealKey];
+
+  if (mealKey === 'breakfast' && breakfastRecipeFull && breakfastRecipeFull.id === selection.id) {
+    const item = recipeToListItem(breakfastRecipeFull);
+    return { ...item, mealKey, time: meta.time, canOpen: true };
+  }
+
+  const poolItem = findPoolItem(mealKey, selection.id, mealKey === 'breakfast' ? [] : null);
+  const base = poolItem || fallback;
+
+  return {
+    mealKey,
+    id: selection.id || base.id,
+    title: selection.title || base.title,
+    kcal: selection.kcal || base.kcal,
+    protein_g: base.protein_g || 0,
+    fat_g: base.fat_g || 0,
+    carbs_g: base.carbs_g || 0,
+    prepTime: base.time || (base.prep_time_min ? `${base.prep_time_min} мин` : '—'),
+    prep_time_min: base.prep_time_min || 15,
+    tone: base.tone || 'warm',
+    tag: meta.tag,
+    meal_type: meta.meal_type,
+    time: meta.time,
+    image: base.image || null,
+    canOpen: mealKey === 'breakfast' || mealKey === 'd',
+  };
+}
+
+function buildDayMeals(selections, breakfastRecipeFull) {
+  return MEAL_ORDER.map(key =>
+    listItemFromSelection(key, selections[key], breakfastRecipeFull)
+  );
+}
+
+function sumDayNutrients(dayMeals, mealsDone, eatenOnly) {
+  return dayMeals.reduce((acc, meal) => {
+    if (eatenOnly && !mealsDone[meal.mealKey]) return acc;
+    acc.kcal += meal.kcal || 0;
+    acc.protein_g += meal.protein_g || 0;
+    acc.fat_g += meal.fat_g || 0;
+    acc.carbs_g += meal.carbs_g || 0;
+    return acc;
+  }, { kcal: 0, protein_g: 0, fat_g: 0, carbs_g: 0 });
+}
+
+function getNextMealKey(mealsDone) {
+  return MEAL_ORDER.find(key => !mealsDone[key]) || null;
+}
+
+function findPoolItem(mealKey, id, breakfastPool) {
+  const pool = getReplacePool(mealKey, breakfastPool || []);
+  return pool.find(r => r.id === id) || null;
+}
+
+function getReplacePool(mealKey, breakfastPool) {
+  if (mealKey === 'breakfast') return breakfastPool;
+  if (mealKey === 'l') return LUNCH_REPLACE_POOL;
+  if (mealKey === 's') return SNACK_REPLACE_POOL;
+  if (mealKey === 'd') return window.DINNER_RECIPE_POOL || [];
+  return [];
+}
+
+function getMealLabel(mealKey) {
+  return (MEAL_META[mealKey]?.tag || 'Блюдо').toUpperCase();
+}
+
+function selectionToRecipe(mealKey, selection, breakfastRecipeFull) {
+  if (mealKey === 'breakfast' && breakfastRecipeFull && breakfastRecipeFull.id === selection.id) {
+    return breakfastRecipeFull;
+  }
+  if (mealKey === 'd') {
+    return {
+      ...window.DEFAULT_DINNER_RECIPE,
+      id: selection.id,
+      name: selection.title,
+      calories: selection.kcal,
+    };
+  }
+  const item = listItemFromSelection(mealKey, selection, breakfastRecipeFull);
+  return {
+    id: item.id,
+    name: item.title,
+    meal_type: item.meal_type,
+    prep_time_min: item.prep_time_min,
+    calories: item.kcal,
+    protein_g: item.protein_g,
+    fat_g: item.fat_g,
+    carbs_g: item.carbs_g,
+    image: item.image,
+    is_hot: item.tone === 'warm',
+    ingredients: [],
+    steps: [],
+  };
+}
 
 function getMealsDoneState() {
   try {
@@ -145,7 +313,13 @@ function saveMealsDoneState(state) {
 
 window.RecipeData = {
   BREAKFAST_BATCH_URL,
-  DEFAULT_BREAKFAST_ID,
+  DEFAULT_BREAKFAST_ID: 'breakfast_regular_300kcal_001',
+  MEAL_ORDER,
+  MEAL_META,
+  MEAL_STORAGE_KEYS,
+  DEFAULT_MEALS,
+  LUNCH_REPLACE_POOL,
+  SNACK_REPLACE_POOL,
   getRecipeTone,
   mealTypeLabel,
   recipeToListItem,
@@ -157,6 +331,15 @@ window.RecipeData = {
   loadBreakfastRecipes,
   getStoredMealSelection,
   saveMealSelection,
+  saveMealSelectionByKey,
+  getAllMealSelections,
+  buildDayMeals,
+  sumDayNutrients,
+  getNextMealKey,
+  getReplacePool,
+  getMealLabel,
+  selectionToRecipe,
+  findPoolItem,
   getFavoriteRecipes,
   isFavoriteRecipe,
   toggleFavoriteRecipe,

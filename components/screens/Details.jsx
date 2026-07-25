@@ -198,7 +198,24 @@ function MealSheet({t, onClose, onDone, onReplace, onOpenFullRecipe, recipe = DE
           WebkitOverflowScrolling: 'touch',
           padding: '8px 24px 20px',
         }}>
-          <PhotoSlot t={t} h={180} radius={t.radius.lg} label={`фото · ${recipe.name}`} tone={tone} src={recipe.image} alt={recipe.name}/>
+          <div style={{position: 'relative'}}>
+            <PhotoSlot t={t} h={180} radius={t.radius.lg} label={`фото · ${recipe.name}`} tone={tone} src={recipe.image} alt={recipe.name}/>
+            <button
+              type="button"
+              aria-label={saved ? 'Убрать из избранного' : 'Сохранить в избранное'}
+              onClick={(e) => { e.stopPropagation(); handleToggleFavorite(); }}
+              style={{
+                position: 'absolute', top: 10, right: 10,
+                width: 40, height: 40, borderRadius: 20,
+                background: saved ? 'rgba(255,255,255,0.95)' : 'rgba(255,255,255,0.88)',
+                border: 'none', cursor: 'pointer',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                boxShadow: '0 2px 10px rgba(0,0,0,0.12)',
+              }}
+            >
+              <Icon name="bookmark" size={18} stroke={saved ? t.accent : t.text} fill={saved ? t.accent : 'none'}/>
+            </button>
+          </div>
 
           <div style={{marginTop: 16, display: 'flex', alignItems: 'center', gap: 6}}>
             <div style={{fontFamily: '"JetBrains Mono", monospace', fontSize: 10, color: t.textMuted, letterSpacing: '0.14em'}}>
@@ -267,21 +284,19 @@ function MealSheet({t, onClose, onDone, onReplace, onOpenFullRecipe, recipe = DE
           <Button t={t} variant="secondary" size="lg" onClick={onClose} style={{flex: '0 0 auto', width: 54, padding: 0}}>
             <Icon name="close" size={20}/>
           </Button>
-          <button
-            type="button"
-            aria-label={saved ? 'Убрать из избранного' : 'Сохранить в избранное'}
+          <Button
+            t={t}
+            variant="secondary"
+            size="lg"
             onClick={handleToggleFavorite}
             style={{
-              flex: '0 0 auto', width: 54, height: 58,
-              borderRadius: t.radius.lg,
-              background: saved ? t.accentSoft : 'transparent',
-              border: `1.5px solid ${saved ? t.accent + '55' : t.borderStrong}`,
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              cursor: 'pointer', padding: 0,
+              flex: '0 0 auto', width: 54, padding: 0,
+              background: saved ? t.accentSoft : undefined,
+              borderColor: saved ? t.accent + '55' : undefined,
             }}
           >
             <Icon name="bookmark" size={20} stroke={saved ? t.accent : t.text} fill={saved ? t.accent : 'none'}/>
-          </button>
+          </Button>
           <Button t={t} onClick={onDone} icon={<Icon name="check" size={18} sw={2.5}/>} style={{flex: 1}}>
             Съедено
           </Button>

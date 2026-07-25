@@ -26,7 +26,16 @@ function WaterGlass({filled, t, onClick}) {
   );
 }
 
-function TodayScreen({t, onOpenMeal, onOpenWorkout, onOpenBeauty, dinnerTitle = 'Куриная грудка с брокколи'}) {
+function TodayScreen({
+  t,
+  onOpenMeal,
+  onOpenWorkout,
+  onOpenBeauty,
+  nextMeal,
+  mealsDone = {},
+  mealsDoneCount = 0,
+  allMealsDone = false,
+}) {
   const [waterMl, setWaterMl] = React.useState(1200);
   const filledGlasses = Math.min(WATER_GLASSES, Math.floor(waterMl / WATER_GLASS_ML));
   const waterLiters = (waterMl / 1000).toFixed(1);
@@ -36,6 +45,11 @@ function TodayScreen({t, onOpenMeal, onOpenWorkout, onOpenBeauty, dinnerTitle = 
     const target = (index + 1) * WATER_GLASS_ML;
     setWaterMl(prev => prev >= target ? index * WATER_GLASS_ML : target);
   };
+
+  const mealProgress = RecipeData.MEAL_ORDER.map(key => (mealsDone[key] ? 1 : 0));
+  const mealTitle = allMealsDone
+    ? 'Все приёмы выполнены'
+    : `${nextMeal?.tag || 'Завтрак'}: ${nextMeal?.title || 'Завтрак'}`;
 
   return (
     <div style={{flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden'}}>
@@ -110,17 +124,19 @@ function TodayScreen({t, onOpenMeal, onOpenWorkout, onOpenBeauty, dinnerTitle = 
           border: `1px solid ${t.border}`, cursor: 'pointer',
           alignItems: 'center', textAlign: 'left', marginBottom: 10,
         }}>
-          <PhotoSlot t={t} w={64} h={64} radius={t.radius.md} label="еда" tone="warm" style={{flexShrink: 0}}/>
+          <PhotoSlot t={t} w={64} h={64} radius={t.radius.md} label={nextMeal?.tag || 'еда'} tone={nextMeal?.tone || 'warm'} src={nextMeal?.image} alt={nextMeal?.title} style={{flexShrink: 0}}/>
           <div style={{flex: 1}}>
             <div style={{display: 'flex', alignItems: 'center', gap: 6}}>
               <Icon name="meal" size={14} stroke={t.accent}/>
-              <div style={{fontSize: 11, color: t.accent, letterSpacing: '0.06em', fontWeight: 600, textTransform: 'uppercase'}}>Питание · 3/4</div>
+              <div style={{fontSize: 11, color: t.accent, letterSpacing: '0.06em', fontWeight: 600, textTransform: 'uppercase'}}>
+                Питание · {mealsDoneCount}/4
+              </div>
             </div>
-            <div style={{fontSize: 15, fontWeight: 600, color: t.text, marginTop: 4, letterSpacing: '-0.01em'}}>
-              Ужин: {dinnerTitle.toLowerCase().replace(/^./, c => c.toUpperCase())}
+            <div style={{fontSize: 15, fontWeight: 600, color: t.text, marginTop: 4, letterSpacing: '-0.01em', lineHeight: 1.3}}>
+              {mealTitle}
             </div>
             <div style={{marginTop: 8, display: 'flex', gap: 4}}>
-              {[1,1,1,0].map((v, i) => (
+              {mealProgress.map((v, i) => (
                 <div key={i} style={{
                   flex: 1, height: 4, borderRadius: 4,
                   background: v ? t.success : t.bgSubtle,
