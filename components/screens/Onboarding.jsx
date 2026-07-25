@@ -163,7 +163,7 @@ function GoalSelectScreen({t, onNext, onBack}) {
   return (
     <div style={{flex: 1, display: 'flex', flexDirection: 'column', padding: '12px 24px 24px'}}>
       {/* header */}
-      <OnboardHeader t={t} step={1} total={6} onBack={onBack}/>
+      <OnboardHeader t={t} step={1} total={7} onBack={onBack}/>
 
       <div style={{marginTop: 20}}>
         <Display t={t} size={30}>Какая твоя<br/>главная цель?</Display>
@@ -400,16 +400,39 @@ function Stat({label, value}) {
 // ─────────────────────────────────────────────────────────
 // 5. PAYWALL
 function PaywallScreen({t, onNext, onBack}) {
-  const [plan, setPlan] = React.useState('quarter');
+  const [plan, setPlan] = React.useState('year');
   const plans = [
-    {id: 'month', title: '1 месяц', price: '399 ₽', per: '399 ₽ / мес', badge: null},
-    {id: 'quarter', title: '3 месяца', price: '799 ₽', per: '≈ 266 ₽ / мес', badge: 'ПОПУЛЯРНЫЙ'},
-    {id: 'year', title: '1 год', price: '1 990 ₽', per: '≈ 165 ₽ / мес', badge: '−58%'},
+    {
+      id: 'week',
+      title: '7 дней',
+      price: '149 ₽',
+      hook: 'Попробуй без риска',
+      perDay: null,
+      size: 'sm',
+    },
+    {
+      id: 'month',
+      title: '1 месяц',
+      price: '399 ₽',
+      hook: 'Стандарт',
+      perDay: '≈ 13 ₽/день',
+      size: 'md',
+    },
+    {
+      id: 'year',
+      title: '1 год',
+      price: '1 990 ₽',
+      hook: 'Экономишь 2 890 ₽',
+      perDay: '5 ₽/день — дешевле чашки чая',
+      badge: '−58%',
+      size: 'lg',
+    },
   ];
+
+  const selected = plans.find(p => p.id === plan);
 
   return (
     <div style={{flex: 1, display: 'flex', flexDirection: 'column', background: t.bg}}>
-      {/* Верх с закрытием */}
       <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 20px 16px'}}>
         <button onClick={onBack} style={{width: 38, height: 38, borderRadius: 20, background: t.surface, border: `1px solid ${t.border}`, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer'}}>
           <Icon name="close" size={18}/>
@@ -420,7 +443,6 @@ function PaywallScreen({t, onNext, onBack}) {
       </div>
 
       <div style={{flex: 1, overflow: 'auto', padding: '0 24px 8px'}}>
-        {/* Заголовок */}
         <div style={{
           padding: '20px 20px 24px',
           borderRadius: t.radius.xl,
@@ -447,13 +469,9 @@ function PaywallScreen({t, onNext, onBack}) {
             <Display t={t} size={30} style={{color: t.bg, marginTop: 16}}>
               Полный доступ<br/>к твоей программе
             </Display>
-            <div style={{marginTop: 12, fontSize: 14, opacity: 0.75, lineHeight: 1.5}}>
-              7 дней бесплатно. Отмена в один клик.
-            </div>
           </div>
         </div>
 
-        {/* Что входит */}
         <div style={{marginTop: 20, padding: '4px 4px'}}>
           {[
             {i: 'meal', l: 'Меню на 30 дней с рецептами'},
@@ -473,46 +491,83 @@ function PaywallScreen({t, onNext, onBack}) {
           ))}
         </div>
 
-        {/* Планы */}
+        {/* Тарифы: годовой — главный акцент */}
         <div style={{marginTop: 24, display: 'flex', flexDirection: 'column', gap: 10}}>
           {plans.map(p => {
             const on = p.id === plan;
+            const isLg = p.size === 'lg';
+            const isSm = p.size === 'sm';
             return (
               <button key={p.id} onClick={() => setPlan(p.id)} style={{
                 position: 'relative',
-                padding: '16px 18px',
-                borderRadius: t.radius.lg,
-                background: on ? t.text : t.surface,
+                padding: isLg ? '22px 20px' : isSm ? '12px 16px' : '16px 18px',
+                borderRadius: isLg ? t.radius.xl : t.radius.lg,
+                background: on
+                  ? (isLg ? `linear-gradient(135deg, ${t.text} 0%, oklch(28% 0.03 40) 100%)` : t.text)
+                  : t.surface,
                 color: on ? t.bg : t.text,
-                border: `1.5px solid ${on ? t.text : t.border}`,
+                border: isLg
+                  ? `2px solid ${on ? t.accent : t.border}`
+                  : `1.5px solid ${on ? t.text : t.border}`,
                 cursor: 'pointer',
                 textAlign: 'left',
-                display: 'flex', alignItems: 'center', gap: 14,
+                display: 'flex',
+                alignItems: isLg ? 'flex-start' : 'center',
+                gap: isLg ? 16 : 14,
                 fontFamily: t.fontBody,
+                boxShadow: isLg && on ? `0 12px 40px -12px ${t.accent}55` : 'none',
+                transform: isLg ? 'scale(1)' : 'scale(0.98)',
+                transition: 'transform 0.15s, box-shadow 0.15s',
               }}>
+                {p.badge && (
+                  <div style={{
+                    position: 'absolute', top: -10, right: 16,
+                    fontFamily: '"JetBrains Mono", monospace', fontSize: 11,
+                    letterSpacing: '0.08em', padding: '5px 12px', borderRadius: 999,
+                    background: t.accent, color: t.accentText, fontWeight: 700,
+                  }}>{p.badge}</div>
+                )}
                 <div style={{
-                  width: 22, height: 22, borderRadius: 22,
+                  width: isLg ? 26 : 22, height: isLg ? 26 : 22, borderRadius: 999,
                   border: `2px solid ${on ? t.accent : t.borderStrong}`,
                   background: on ? t.accent : 'transparent',
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  flexShrink: 0, marginTop: isLg ? 4 : 0,
                 }}>
-                  {on && <div style={{width: 8, height: 8, borderRadius: 8, background: t.bg}}/>}
+                  {on && <div style={{width: isLg ? 10 : 8, height: isLg ? 10 : 8, borderRadius: 999, background: t.bg}}/>}
                 </div>
                 <div style={{flex: 1}}>
-                  <div style={{display: 'flex', alignItems: 'center', gap: 8}}>
-                    <div style={{fontSize: 15, fontWeight: 600}}>{p.title}</div>
-                    {p.badge && (
-                      <div style={{
-                        fontFamily: '"JetBrains Mono", monospace', fontSize: 9,
-                        letterSpacing: '0.1em', padding: '3px 7px', borderRadius: 6,
-                        background: on ? t.accent : t.accentSoft,
-                        color: on ? t.accentText : t.accent,
-                      }}>{p.badge}</div>
-                    )}
+                  <div style={{display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap'}}>
+                    <div style={{
+                      fontSize: isLg ? 20 : isSm ? 14 : 16,
+                      fontWeight: 700,
+                      letterSpacing: '-0.02em',
+                    }}>{p.title}</div>
                   </div>
-                  <div style={{fontSize: 12.5, opacity: 0.65, marginTop: 3}}>{p.per}</div>
+                  <div style={{
+                    fontSize: isSm ? 11 : 12.5,
+                    opacity: on ? 0.75 : 0.65,
+                    marginTop: 4,
+                    fontWeight: 500,
+                  }}>{p.hook}</div>
+                  {p.perDay && (
+                    <div style={{
+                      marginTop: isLg ? 10 : 6,
+                      fontSize: isLg ? 15 : 12,
+                      fontWeight: isLg ? 600 : 500,
+                      color: on && isLg ? t.accent : (on ? 'rgba(255,255,255,0.85)' : t.accent),
+                      letterSpacing: '-0.01em',
+                    }}>{p.perDay}</div>
+                  )}
                 </div>
-                <div style={{fontFamily: t.fontDisplay, fontWeight: t.displayWeight, fontStyle: t.displayItalic ? 'italic' : 'normal', fontSize: 22, letterSpacing: '-0.02em'}}>
+                <div style={{
+                  fontFamily: t.fontDisplay,
+                  fontWeight: t.displayWeight,
+                  fontStyle: t.displayItalic ? 'italic' : 'normal',
+                  fontSize: isLg ? 28 : isSm ? 18 : 22,
+                  letterSpacing: '-0.02em',
+                  flexShrink: 0,
+                }}>
                   {p.price}
                 </div>
               </button>
@@ -520,7 +575,14 @@ function PaywallScreen({t, onNext, onBack}) {
           })}
         </div>
 
-        {/* Отзыв */}
+        <div style={{
+          marginTop: 16, textAlign: 'center',
+          fontSize: 13, color: t.textMuted, lineHeight: 1.5,
+          padding: '0 8px',
+        }}>
+          Отмена в любой момент. Без скрытых платежей.
+        </div>
+
         <div style={{marginTop: 20, padding: 16, borderRadius: t.radius.lg, background: t.bgSubtle, display: 'flex', gap: 12}}>
           <PhotoSlot t={t} w={44} h={44} radius={22} label="" tone="warm" style={{flexShrink: 0}}/>
           <div>
@@ -537,17 +599,16 @@ function PaywallScreen({t, onNext, onBack}) {
         </div>
       </div>
 
-      {/* CTA внизу */}
       <div style={{
-        padding: '16px 24px 12px',
+        padding: '16px 24px calc(12px + env(safe-area-inset-bottom, 0px))',
         borderTop: `1px solid ${t.border}`,
         background: t.surface,
       }}>
         <Button t={t} onClick={onNext} icon={<Icon name="arrow" size={20}/>} style={{width: '100%'}}>
-          Попробовать 7 дней бесплатно
+          {plan === 'week' ? 'Попробовать 7 дней' : plan === 'year' ? 'Выбрать годовой тариф' : 'Продолжить'}
         </Button>
         <div style={{textAlign: 'center', marginTop: 8, fontSize: 11.5, color: t.textFaint}}>
-          Далее 799 ₽ / 3 мес. Отмена в любой момент.
+          {selected?.price} · {selected?.hook}
         </div>
       </div>
     </div>

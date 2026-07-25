@@ -2,13 +2,15 @@
 
 const VALID_SCREENS = new Set([
   'splash', 'slider1', 'slider2', 'slider3',
-  'goal', 'zones', 'stats', 'activity', 'restrictions',
+  'goal', 'zones', 'stats', 'activity', 'restrictions', 'blacklist',
   'plan-gen', 'paywall', 'signup',
   'today', 'meals', 'recipe', 'workout-overview', 'workout',
   'beauty', 'profile', 'awards',
 ]);
 
 const MAIN_TAB_SCREENS = ['today', 'meals', 'workout-overview', 'beauty', 'profile'];
+
+const DEFAULT_DINNER = { id: 'chicken-broccoli', title: 'Куриная грудка с брокколи', kcal: 320 };
 
 function getInitialScreen() {
   const onboarded = localStorage.getItem('florae_onboarded') === '1';
@@ -28,6 +30,13 @@ function FloraeApp() {
   const [screenId, setScreenIdRaw] = React.useState(getInitialScreen);
   const [sheet, setSheet] = React.useState(null);
   const [reward, setReward] = React.useState(false);
+  const [replaceOpen, setReplaceOpen] = React.useState(false);
+  const [dinner, setDinner] = React.useState(() => {
+    try {
+      const saved = JSON.parse(localStorage.getItem('florae_dinner') || 'null');
+      return saved || DEFAULT_DINNER;
+    } catch { return DEFAULT_DINNER; }
+  });
 
   const setScreenId = (id) => {
     if (VALID_SCREENS.has(id)) setScreenIdRaw(id);
@@ -35,6 +44,7 @@ function FloraeApp() {
   };
 
   React.useEffect(() => { localStorage.setItem('florae_screen', screenId); }, [screenId]);
+  React.useEffect(() => { localStorage.setItem('florae_dinner', JSON.stringify(dinner)); }, [dinner]);
 
   const goto = id => setScreenId(id);
   const isMainTab = MAIN_TAB_SCREENS.includes(screenId);
@@ -63,6 +73,14 @@ function FloraeApp() {
     setTimeout(() => setReward(false), 3800);
   };
 
+  const openReplace = () => setReplaceOpen(true);
+
+  const applyReplacement = (recipe) => {
+    setDinner({ id: recipe.id, title: recipe.title, kcal: recipe.kcal });
+    setReplaceOpen(false);
+    setSheet(null);
+  };
+
   const renderScreen = () => {
     switch (screenId) {
       case 'splash': return <SplashScreen t={t} onNext={() => goto('slider1')} onLogin={skipToApp}/>;
@@ -73,16 +91,26 @@ function FloraeApp() {
       case 'zones': return <ZonesScreen t={t} onNext={() => goto('stats')} onBack={() => goto('goal')}/>;
       case 'stats': return <StatsScreen t={t} onNext={() => goto('activity')} onBack={() => goto('zones')}/>;
       case 'activity': return <ActivityScreen t={t} onNext={() => goto('restrictions')} onBack={() => goto('stats')}/>;
-      case 'restrictions': return <RestrictionsScreen t={t} onNext={() => goto('plan-gen')} onBack={() => goto('activity')}/>;
+      case 'restrictions': return <RestrictionsScreen t={t} onNext={() => goto('blacklist')} onBack={() => goto('activity')}/>;
+      case 'blacklist': return <BlacklistScreen t={t} onNext={() => goto('plan-gen')} onBack={() => goto('restrictions')}/>;
       case 'plan-gen': return <PlanGenerationScreen t={t} onNext={() => goto('paywall')}/>;
       case 'paywall': return <PaywallScreen t={t} onNext={() => goto('signup')} onBack={() => goto('plan-gen')}/>;
       case 'signup': return <SignupScreen t={t} onNext={finishOnboarding} onBack={() => goto('paywall')}/>;
       case 'today': return <TodayScreen t={t}
+        dinnerTitle={dinner.title}
         onOpenMeal={() => setSheet('meal')}
         onOpenWorkout={() => goto('workout-overview')}
         onOpenBeauty={() => goto('beauty')}/>;
-      case 'meals': return <MealsScreen t={t} onOpenRecipe={() => goto('recipe')}/>;
-      case 'recipe': return <RecipeScreen t={t} onBack={() => goto('meals')} onDone={completeTask}/>;
+      case 'meals': return <MealsScreen t={t}
+        dinnerTitle={dinner.title}
+        dinnerKcal={dinner.kcal}
+        onOpenRecipe={() => goto('recipe')}
+        onReplaceDinner={openReplace}/>;
+      case 'recipe': return <RecipeScreen t={t}
+        title={dinner.title}
+        onBack={() => goto('meals')}
+        onDone={completeTask}
+        onReplace={openReplace}/>;
       case 'workout-overview': return <WorkoutOverviewScreen t={t} onStart={() => goto('workout')} onBack={() => goto('today')}/>;
       case 'workout': return <WorkoutScreen t={t} onBack={() => goto('workout-overview')} onDone={completeTask}/>;
       case 'beauty': return <BeautyScreen t={t}/>;
@@ -96,7 +124,20 @@ function FloraeApp() {
     <AppShell t={t}>
       <div className="app-screen">
         {renderScreen()}
-        {sheet === 'meal' && <MealSheet t={t} onClose={() => setSheet(null)} onDone={completeTask}/>}
+        {sheet === 'meal' && (
+          <MealSheet t={t}
+            mealTitle={dinner.title}
+            onClose={() => setSheet(null)}
+            onDone={completeTask}
+            onReplace={openReplace}/>
+        )}
+        {replaceOpen && (
+          <ReplaceMealSheet t={t}
+            currentTitle={dinner.title}
+            currentId={dinner.id}
+            onClose={() => setReplaceOpen(false)}
+            onSelect={applyReplacement}/>
+        )}
         {reward && <RewardOverlay t={t} onClose={() => setReward(false)}/>}
       </div>
       {isMainTab && <TabBar t={t} active={tabValue} onChange={handleTabChange}/>}

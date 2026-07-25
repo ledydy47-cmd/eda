@@ -1,11 +1,11 @@
 // Экран «Питание»
 
-function MealsScreen({t, onOpenRecipe}) {
+function MealsScreen({t, onOpenRecipe, onReplaceDinner, dinnerTitle = 'Куриная грудка с брокколи', dinnerKcal = 320}) {
   const meals = [
     {id: 'b', time: '08:00', icon: 'sun', tag: 'Завтрак', title: 'Овсяная каша с ягодами и мёдом', kcal: 280, done: true, tone: 'warm'},
     {id: 'l', time: '13:30', icon: 'sun', tag: 'Обед', title: 'Куриный суп с киноа и зеленью', kcal: 350, done: true, tone: 'green'},
     {id: 's', time: '16:00', icon: 'apple', tag: 'Перекус', title: 'Яблоко и горсть миндаля', kcal: 150, done: false, tone: 'coral'},
-    {id: 'd', time: '19:00', icon: 'moon', tag: 'Ужин', title: 'Куриная грудка с брокколи', kcal: 320, done: false, tone: 'warm'},
+    {id: 'd', time: '19:00', icon: 'moon', tag: 'Ужин', title: dinnerTitle, kcal: dinnerKcal, done: false, tone: 'warm', canReplace: true},
   ];
   const doneKcal = meals.filter(m => m.done).reduce((s, m) => s + m.kcal, 0);
   const totalTarget = 1200;
@@ -71,35 +71,48 @@ function MealsScreen({t, onOpenRecipe}) {
 
       {/* Meals list */}
       <div style={{flex: 1, overflow: 'auto', padding: '0 20px 20px'}}>
-        {meals.map((m, i) => (
+        {meals.map((m) => (
           <div key={m.id} style={{
             padding: 14, borderRadius: t.radius.lg,
             background: t.surface, border: `1px solid ${t.border}`,
             marginBottom: 10,
-            display: 'flex', gap: 12, alignItems: 'center',
             opacity: m.done ? 0.7 : 1,
           }}>
-            <PhotoSlot t={t} w={72} h={72} radius={t.radius.md} label={m.tag} tone={m.tone} style={{flexShrink: 0}}/>
-            <div style={{flex: 1, minWidth: 0}}>
-              <div style={{display: 'flex', alignItems: 'center', gap: 6}}>
-                <div style={{fontFamily: '"JetBrains Mono", monospace', fontSize: 10, color: t.textMuted, letterSpacing: '0.06em'}}>{m.time}</div>
-                <div style={{width: 3, height: 3, borderRadius: 3, background: t.textFaint}}/>
-                <div style={{fontSize: 11, color: t.accent, fontWeight: 600, letterSpacing: '0.02em'}}>{m.tag}</div>
+            <div style={{display: 'flex', gap: 12, alignItems: 'center'}}>
+              <PhotoSlot t={t} w={72} h={72} radius={t.radius.md} label={m.tag} tone={m.tone} style={{flexShrink: 0}}/>
+              <div style={{flex: 1, minWidth: 0}}>
+                <div style={{display: 'flex', alignItems: 'center', gap: 6}}>
+                  <div style={{fontFamily: '"JetBrains Mono", monospace', fontSize: 10, color: t.textMuted, letterSpacing: '0.06em'}}>{m.time}</div>
+                  <div style={{width: 3, height: 3, borderRadius: 3, background: t.textFaint}}/>
+                  <div style={{fontSize: 11, color: t.accent, fontWeight: 600, letterSpacing: '0.02em'}}>{m.tag}</div>
+                </div>
+                <div style={{fontSize: 14.5, fontWeight: 600, color: t.text, marginTop: 4, letterSpacing: '-0.01em', lineHeight: 1.25, textDecoration: m.done ? 'line-through' : 'none', textDecorationColor: t.textFaint}}>
+                  {m.title}
+                </div>
+                <div style={{fontSize: 12.5, color: t.textMuted, marginTop: 4}}>{m.kcal} ккал · 25 мин</div>
               </div>
-              <div style={{fontSize: 14.5, fontWeight: 600, color: t.text, marginTop: 4, letterSpacing: '-0.01em', lineHeight: 1.25, textDecoration: m.done ? 'line-through' : 'none', textDecorationColor: t.textFaint}}>
-                {m.title}
-              </div>
-              <div style={{fontSize: 12.5, color: t.textMuted, marginTop: 4}}>{m.kcal} ккал · 25 мин</div>
+              <button style={{
+                width: 32, height: 32, borderRadius: 16, flexShrink: 0,
+                background: m.done ? t.success : 'transparent',
+                border: m.done ? 'none' : `1.5px solid ${t.borderStrong}`,
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                cursor: 'pointer',
+              }}>
+                {m.done && <Icon name="check" size={16} stroke="#fff" sw={2.5}/>}
+              </button>
             </div>
-            <button style={{
-              width: 32, height: 32, borderRadius: 16, flexShrink: 0,
-              background: m.done ? t.success : 'transparent',
-              border: m.done ? 'none' : `1.5px solid ${t.borderStrong}`,
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              cursor: 'pointer',
-            }}>
-              {m.done && <Icon name="check" size={16} stroke="#fff" sw={2.5}/>}
-            </button>
+            {m.canReplace && onReplaceDinner && !m.done && (
+              <button onClick={onReplaceDinner} style={{
+                marginTop: 10, width: '100%', padding: '10px 12px',
+                borderRadius: t.radius.md,
+                background: t.accentSoft, border: `1px solid ${t.accent}33`,
+                color: t.accent, fontSize: 13, fontWeight: 600,
+                cursor: 'pointer', fontFamily: t.fontBody,
+                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
+              }}>
+                <Icon name="meal" size={15} stroke={t.accent}/> Заменить ужин
+              </button>
+            )}
           </div>
         ))}
 

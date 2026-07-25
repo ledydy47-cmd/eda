@@ -1,7 +1,154 @@
 // Детальные экраны: полный рецепт, обзор тренировки, все награды, bottom sheet ужина, награда
 
+const RECIPE_POOL = [
+  {id: 'salmon-salad', title: 'Салат с лососем и авокадо', kcal: 310, time: '20 мин', tone: 'green', tag: 'Ужин'},
+  {id: 'turkey-zucchini', title: 'Индейка с кабачками', kcal: 290, time: '25 мин', tone: 'warm', tag: 'Ужин'},
+  {id: 'egg-veg', title: 'Омлет с овощами', kcal: 280, time: '15 мин', tone: 'coral', tag: 'Ужин'},
+  {id: 'fish-lemon', title: 'Запечённая рыба с лимоном', kcal: 300, time: '30 мин', tone: 'green', tag: 'Ужин'},
+  {id: 'cottage-greens', title: 'Творог с зеленью', kcal: 260, time: '10 мин', tone: 'warm', tag: 'Ужин'},
+  {id: 'veg-stew', title: 'Тушёные овощи с индейкой', kcal: 295, time: '25 мин', tone: 'green', tag: 'Ужин'},
+];
+
+function getDislikedRecipes() {
+  try { return JSON.parse(localStorage.getItem('florae_disliked_recipes') || '[]'); }
+  catch { return []; }
+}
+
+function addDislikedRecipe(id) {
+  const list = getDislikedRecipes();
+  if (!list.includes(id)) {
+    list.push(id);
+    localStorage.setItem('florae_disliked_recipes', JSON.stringify(list));
+  }
+}
+
+function getAvailableAlternatives(excludeId) {
+  const disliked = new Set(getDislikedRecipes());
+  if (excludeId) disliked.add(excludeId);
+  return RECIPE_POOL.filter(r => !disliked.has(r.id));
+}
+
+// ─── Замена блюда — 3 альтернативы ─────────────
+function ReplaceMealSheet({t, currentTitle, currentId, onClose, onSelect}) {
+  const [options, setOptions] = React.useState(() => getAvailableAlternatives(currentId).slice(0, 3));
+  const [applied, setApplied] = React.useState(false);
+  const [selectedTitle, setSelectedTitle] = React.useState('');
+
+  const handleDislike = (recipe) => {
+    addDislikedRecipe(recipe.id);
+    setOptions(prev => {
+      const next = prev.filter(r => r.id !== recipe.id);
+      const pool = getAvailableAlternatives(currentId).filter(r => !next.some(o => o.id === r.id));
+      if (pool.length > 0 && next.length < 3) next.push(pool[0]);
+      return next;
+    });
+  };
+
+  const handleSelect = (recipe) => {
+    setSelectedTitle(recipe.title);
+    setApplied(true);
+    setTimeout(() => onSelect(recipe), 600);
+  };
+
+  return (
+    <div style={{
+      position: 'absolute', inset: 0, zIndex: 25,
+      display: 'flex', flexDirection: 'column',
+      background: 'rgba(0,0,0,0.45)',
+      animation: 'fadeIn 0.2s',
+    }} onClick={onClose}>
+      <div style={{flex: 1}} onClick={onClose}/>
+      <div onClick={e => e.stopPropagation()} style={{
+        background: t.bg,
+        borderTopLeftRadius: t.radius.xl,
+        borderTopRightRadius: t.radius.xl,
+        padding: '10px 0 0',
+        maxHeight: '88%',
+        animation: 'slideUp 0.3s cubic-bezier(0.2, 0.9, 0.3, 1)',
+      }}>
+        <div style={{width: 40, height: 4, borderRadius: 2, background: t.borderStrong, margin: '0 auto 12px'}}/>
+
+        <div style={{padding: '0 24px 16px'}}>
+          <div style={{fontFamily: '"JetBrains Mono", monospace', fontSize: 10, color: t.textMuted, letterSpacing: '0.14em'}}>
+            ЗАМЕНА · УЖИН
+          </div>
+          <Display t={t} size={22} style={{marginTop: 6}}>
+            {applied ? 'Замена применена!' : 'Выбери альтернативу'}
+          </Display>
+          {!applied && (
+            <p style={{marginTop: 6, fontSize: 13, color: t.textMuted, lineHeight: 1.45}}>
+              Варианты уже отфильтрованы по твоим ограничениям и чёрному списку.
+            </p>
+          )}
+        </div>
+
+        <div style={{overflow: 'auto', padding: '0 20px 8px'}}>
+          {applied ? (
+            <div style={{
+              padding: 24, borderRadius: t.radius.lg,
+              background: t.successSoft, textAlign: 'center',
+              margin: '8px 4px 16px',
+            }}>
+              <Icon name="checkCircle" size={40} stroke={t.success} sw={2}/>
+              <div style={{marginTop: 12, fontSize: 16, fontWeight: 600, color: t.text}}>{selectedTitle}</div>
+              <div style={{fontSize: 13, color: t.textMuted, marginTop: 4}}>Теперь это твоё блюдо на сегодня</div>
+            </div>
+          ) : options.length === 0 ? (
+            <div style={{padding: 24, textAlign: 'center', color: t.textMuted, fontSize: 14}}>
+              Больше подходящих вариантов нет. Попробуй изменить чёрный список в профиле.
+            </div>
+          ) : options.map(recipe => (
+            <div key={recipe.id} style={{
+              padding: 14, borderRadius: t.radius.lg,
+              background: t.surface, border: `1px solid ${t.border}`,
+              marginBottom: 10,
+            }}>
+              <div style={{display: 'flex', gap: 12, alignItems: 'center'}}>
+                <PhotoSlot t={t} w={72} h={72} radius={t.radius.md} label={recipe.tag} tone={recipe.tone} style={{flexShrink: 0}}/>
+                <div style={{flex: 1, minWidth: 0}}>
+                  <div style={{fontSize: 15, fontWeight: 600, color: t.text, lineHeight: 1.25}}>{recipe.title}</div>
+                  <div style={{fontSize: 12.5, color: t.textMuted, marginTop: 4}}>{recipe.kcal} ккал · {recipe.time}</div>
+                </div>
+              </div>
+              <div style={{display: 'flex', gap: 8, marginTop: 12}}>
+                <button onClick={() => handleDislike(recipe)} style={{
+                  flex: 1, padding: '10px 12px', borderRadius: t.radius.md,
+                  background: t.bgSubtle, border: `1px solid ${t.border}`,
+                  color: t.textMuted, fontSize: 13, fontWeight: 600, cursor: 'pointer',
+                  fontFamily: t.fontBody,
+                }}>
+                  Не нравится
+                </button>
+                <button onClick={() => handleSelect(recipe)} style={{
+                  flex: 1.4, padding: '10px 12px', borderRadius: t.radius.md,
+                  background: t.accent, border: 'none',
+                  color: t.accentText, fontSize: 13, fontWeight: 600, cursor: 'pointer',
+                  fontFamily: t.fontBody,
+                }}>
+                  Выбрать
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        <div style={{padding: '12px 24px calc(16px + env(safe-area-inset-bottom, 0px))', borderTop: `1px solid ${t.border}`}}>
+          <button onClick={onClose} style={{
+            width: '100%', padding: '14px', borderRadius: t.radius.md,
+            background: 'transparent', border: `1.5px solid ${t.border}`,
+            color: t.text, fontSize: 14, fontWeight: 600, cursor: 'pointer',
+            fontFamily: t.fontBody,
+          }}>
+            {applied ? 'Закрыть' : 'Отмена'}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ─── Bottom Sheet — карточка ужина/задания ─────────────
-function MealSheet({t, onClose, onDone}) {
+function MealSheet({t, onClose, onDone, onReplace, mealTitle = 'Куриная грудка с брокколи'}) {
   return (
     <div style={{
       position: 'absolute', inset: 0, zIndex: 20,
@@ -29,7 +176,7 @@ function MealSheet({t, onClose, onDone}) {
             <div style={{fontFamily: '"JetBrains Mono", monospace', fontSize: 10, color: t.textMuted, letterSpacing: '0.14em'}}>19:00 · УЖИН</div>
           </div>
           <Display t={t} size={22} style={{marginTop: 6}}>
-            Куриная грудка с брокколи
+            {mealTitle}
           </Display>
 
           {/* Метрики */}
@@ -75,6 +222,18 @@ function MealSheet({t, onClose, onDone}) {
           }}>
             Полный рецепт <Icon name="arrow" size={16}/>
           </button>
+
+          {onReplace && (
+            <button onClick={onReplace} style={{
+              marginTop: 10, width: '100%', padding: '12px', borderRadius: t.radius.md,
+              background: t.accentSoft, border: `1.5px solid ${t.accent}44`,
+              color: t.accent, cursor: 'pointer',
+              fontFamily: t.fontBody, fontSize: 13.5, fontWeight: 600,
+              display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+            }}>
+              <Icon name="meal" size={16} stroke={t.accent}/> Заменить ужин
+            </button>
+          )}
         </div>
 
         <div style={{padding: '12px 24px calc(20px + env(safe-area-inset-bottom, 0px))', borderTop: `1px solid ${t.border}`, background: t.surface, display: 'flex', gap: 10}}>
@@ -91,7 +250,7 @@ function MealSheet({t, onClose, onDone}) {
 }
 
 // ─── Экран полного рецепта ─────────────
-function RecipeScreen({t, onBack, onDone}) {
+function RecipeScreen({t, onBack, onDone, onReplace, title = 'Куриная грудка с брокколи'}) {
   const [portions, setPortions] = React.useState(1);
   return (
     <div style={{flex: 1, display: 'flex', flexDirection: 'column'}}>
@@ -120,7 +279,7 @@ function RecipeScreen({t, onBack, onDone}) {
         <div style={{display: 'flex', alignItems: 'center', gap: 6}}>
           <div style={{fontFamily: '"JetBrains Mono", monospace', fontSize: 10, color: t.accent, letterSpacing: '0.14em'}}>УЖИН · 25 МИН</div>
         </div>
-        <Display t={t} size={28} style={{marginTop: 6}}>Куриная грудка<br/>с брокколи</Display>
+        <Display t={t} size={28} style={{marginTop: 6}}>{title}</Display>
 
         {/* Rating */}
         <div style={{marginTop: 12, display: 'flex', alignItems: 'center', gap: 14, fontSize: 13, color: t.textMuted}}>
@@ -211,7 +370,18 @@ function RecipeScreen({t, onBack, onDone}) {
         </div>
       </div>
 
-      <div style={{padding: '12px 24px 12px', borderTop: `1px solid ${t.border}`, background: t.surface}}>
+      <div style={{padding: '12px 24px calc(12px + env(safe-area-inset-bottom, 0px))', borderTop: `1px solid ${t.border}`, background: t.surface, display: 'flex', flexDirection: 'column', gap: 8}}>
+        {onReplace && (
+          <button onClick={onReplace} style={{
+            width: '100%', padding: '12px', borderRadius: t.radius.md,
+            background: t.accentSoft, border: `1.5px solid ${t.accent}44`,
+            color: t.accent, cursor: 'pointer',
+            fontFamily: t.fontBody, fontSize: 14, fontWeight: 600,
+            display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+          }}>
+            <Icon name="meal" size={16} stroke={t.accent}/> Заменить блюдо
+          </button>
+        )}
         <Button t={t} onClick={onDone} icon={<Icon name="check" size={18} sw={2.5}/>} style={{width: '100%'}}>
           Отметить съеденным
         </Button>
@@ -446,6 +616,7 @@ function RewardOverlay({t, onClose}) {
 }
 
 window.MealSheet = MealSheet;
+window.ReplaceMealSheet = ReplaceMealSheet;
 window.RecipeScreen = RecipeScreen;
 window.WorkoutOverviewScreen = WorkoutOverviewScreen;
 window.AwardsScreen = AwardsScreen;

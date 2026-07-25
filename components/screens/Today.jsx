@@ -1,6 +1,6 @@
 // Главный экран «Сегодня»
 
-function TodayScreen({t, onOpenMeal, onOpenWorkout, onOpenBeauty}) {
+function TodayScreen({t, onOpenMeal, onOpenWorkout, onOpenBeauty, dinnerTitle = 'Куриная грудка с брокколи'}) {
   return (
     <div style={{flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden'}}>
       {/* Верх с датой */}
@@ -80,7 +80,9 @@ function TodayScreen({t, onOpenMeal, onOpenWorkout, onOpenBeauty}) {
               <Icon name="meal" size={14} stroke={t.accent}/>
               <div style={{fontSize: 11, color: t.accent, letterSpacing: '0.06em', fontWeight: 600, textTransform: 'uppercase'}}>Питание · 3/4</div>
             </div>
-            <div style={{fontSize: 15, fontWeight: 600, color: t.text, marginTop: 4, letterSpacing: '-0.01em'}}>Ужин: курица с овощами</div>
+            <div style={{fontSize: 15, fontWeight: 600, color: t.text, marginTop: 4, letterSpacing: '-0.01em'}}>
+              Ужин: {dinnerTitle.toLowerCase().replace(/^./, c => c.toUpperCase())}
+            </div>
             <div style={{marginTop: 8, display: 'flex', gap: 4}}>
               {[1,1,1,0].map((v, i) => (
                 <div key={i} style={{

@@ -21,7 +21,7 @@ function ZonesScreen({t, onNext, onBack}) {
 
   return (
     <div style={{flex: 1, display: 'flex', flexDirection: 'column', padding: '12px 24px 24px'}}>
-      <OnboardHeader t={t} step={2} total={6} onBack={onBack}/>
+      <OnboardHeader t={t} step={2} total={7} onBack={onBack}/>
 
       <div style={{marginTop: 20}}>
         <Display t={t} size={30}>Что хочешь<br/>улучшить?</Display>
@@ -84,7 +84,7 @@ function StatsScreen({t, onNext, onBack}) {
 
   return (
     <div style={{flex: 1, display: 'flex', flexDirection: 'column', padding: '12px 24px 24px'}}>
-      <OnboardHeader t={t} step={3} total={6} onBack={onBack}/>
+      <OnboardHeader t={t} step={3} total={7} onBack={onBack}/>
 
       <div style={{marginTop: 20}}>
         <Display t={t} size={30}>Расскажи<br/>о себе</Display>
@@ -212,7 +212,7 @@ function ActivityScreen({t, onNext, onBack}) {
 
   return (
     <div style={{flex: 1, display: 'flex', flexDirection: 'column', padding: '12px 24px 24px'}}>
-      <OnboardHeader t={t} step={4} total={6} onBack={onBack}/>
+      <OnboardHeader t={t} step={4} total={7} onBack={onBack}/>
 
       <div style={{marginTop: 20}}>
         <Display t={t} size={30}>Твой уровень<br/>активности?</Display>
@@ -291,7 +291,7 @@ function RestrictionsScreen({t, onNext, onBack}) {
 
   return (
     <div style={{flex: 1, display: 'flex', flexDirection: 'column', padding: '12px 24px 24px'}}>
-      <OnboardHeader t={t} step={5} total={6} onBack={onBack}/>
+      <OnboardHeader t={t} step={5} total={7} onBack={onBack}/>
 
       <div style={{marginTop: 20}}>
         <Display t={t} size={30}>Особенности<br/>питания?</Display>
@@ -332,7 +332,173 @@ function RestrictionsScreen({t, onNext, onBack}) {
 
       <div style={{marginTop: 16}}>
         <Button t={t} onClick={onNext} icon={<Icon name="arrow" size={20}/>} style={{width: '100%'}}>
-          Готово
+          Продолжить
+        </Button>
+      </div>
+    </div>
+  );
+}
+
+// ─── Q6: Чёрный список продуктов ─────────────────
+function BlacklistScreen({t, onNext, onBack}) {
+  const items = [
+    {id: 'fish', emoji: '🐟', l: 'Рыба и морепродукты'},
+    {id: 'dairy', emoji: '🥛', l: 'Молочные продукты'},
+    {id: 'cottage', emoji: '🧀', l: 'Творог и сыр'},
+    {id: 'eggs', emoji: '🥚', l: 'Яйца'},
+    {id: 'redmeat', emoji: '🥩', l: 'Красное мясо'},
+    {id: 'mushrooms', emoji: '🍄', l: 'Грибы'},
+    {id: 'broccoli', emoji: '🥦', l: 'Капуста и брокколи'},
+    {id: 'legumes', emoji: '🫘', l: 'Бобовые (фасоль, чечев.)'},
+    {id: 'nuts', emoji: '🥜', l: 'Орехи'},
+    {id: 'onion', emoji: '🧅', l: 'Лук и чеснок'},
+  ];
+  const [sel, setSel] = React.useState(new Set());
+  const [custom, setCustom] = React.useState('');
+  const [customList, setCustomList] = React.useState([]);
+
+  const toggle = (id) => {
+    const n = new Set(sel);
+    n.delete('none');
+    n.has(id) ? n.delete(id) : n.add(id);
+    setSel(n);
+  };
+
+  const selectNone = () => {
+    setSel(new Set(['none']));
+  };
+
+  const addCustom = () => {
+    const v = custom.trim();
+    if (!v) return;
+    setCustomList(prev => [...prev, v]);
+    setCustom('');
+    const n = new Set(sel);
+    n.delete('none');
+    n.add(`custom:${v}`);
+    setSel(n);
+  };
+
+  const handleNext = () => {
+    const blacklist = sel.has('none')
+      ? []
+      : [...sel].filter(id => !id.startsWith('custom:')).concat(customList);
+    localStorage.setItem('florae_food_blacklist', JSON.stringify(blacklist));
+    onNext();
+  };
+
+  const noneSelected = sel.has('none');
+
+  return (
+    <div style={{flex: 1, display: 'flex', flexDirection: 'column', padding: '12px 24px 24px'}}>
+      <OnboardHeader t={t} step={6} total={7} onBack={onBack}/>
+
+      <div style={{marginTop: 20}}>
+        <Display t={t} size={28}>Что ты точно<br/>не ешь?</Display>
+        <p style={{marginTop: 8, fontSize: 14, color: t.textMuted}}>
+          Уберём из меню навсегда
+        </p>
+      </div>
+
+      <div style={{marginTop: 18, flex: 1, overflow: 'auto', display: 'flex', flexDirection: 'column', gap: 8}}>
+        {items.map(o => {
+          const on = !noneSelected && sel.has(o.id);
+          return (
+            <button key={o.id} onClick={() => toggle(o.id)} style={{
+              display: 'flex', alignItems: 'center', gap: 12,
+              padding: '13px 16px',
+              borderRadius: t.radius.md,
+              background: on ? t.text : t.surface,
+              color: on ? t.bg : t.text,
+              border: `1.5px solid ${on ? t.text : t.border}`,
+              cursor: 'pointer', textAlign: 'left',
+              fontFamily: t.fontBody, fontSize: 15, fontWeight: 500,
+            }}>
+              <span style={{fontSize: 20, lineHeight: 1}}>{o.emoji}</span>
+              <span style={{flex: 1}}>{o.l}</span>
+              <div style={{
+                width: 22, height: 22, borderRadius: 6,
+                background: on ? t.accent : 'transparent',
+                border: on ? 'none' : `1.5px solid ${t.borderStrong}`,
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+              }}>
+                {on && <Icon name="check" size={14} stroke={t.accentText} sw={3}/>}
+              </div>
+            </button>
+          );
+        })}
+
+        {customList.map(c => {
+          const id = `custom:${c}`;
+          const on = !noneSelected && sel.has(id);
+          return (
+            <button key={id} onClick={() => toggle(id)} style={{
+              display: 'flex', alignItems: 'center', gap: 12,
+              padding: '13px 16px', borderRadius: t.radius.md,
+              background: on ? t.text : t.surface,
+              color: on ? t.bg : t.text,
+              border: `1.5px solid ${on ? t.text : t.border}`,
+              cursor: 'pointer', textAlign: 'left', fontFamily: t.fontBody, fontSize: 15,
+            }}>
+              <span style={{fontSize: 20}}>✏️</span>
+              <span style={{flex: 1}}>{c}</span>
+              <div style={{
+                width: 22, height: 22, borderRadius: 6,
+                background: on ? t.accent : 'transparent',
+                border: on ? 'none' : `1.5px solid ${t.borderStrong}`,
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+              }}>
+                {on && <Icon name="check" size={14} stroke={t.accentText} sw={3}/>}
+              </div>
+            </button>
+          );
+        })}
+
+        <div style={{
+          display: 'flex', gap: 8, alignItems: 'center',
+          padding: '4px 0 8px',
+        }}>
+          <span style={{fontSize: 20, flexShrink: 0}}>➕</span>
+          <input
+            value={custom}
+            onChange={e => setCustom(e.target.value)}
+            onKeyDown={e => e.key === 'Enter' && addCustom()}
+            placeholder="Добавить своё"
+            style={{
+              flex: 1, height: 48, padding: '0 14px',
+              borderRadius: t.radius.md,
+              background: t.surface, border: `1.5px solid ${t.border}`,
+              fontFamily: t.fontBody, fontSize: 15, color: t.text, outline: 'none',
+            }}
+          />
+          {custom.trim() && (
+            <button onClick={addCustom} style={{
+              height: 48, padding: '0 16px', borderRadius: t.radius.md,
+              background: t.accent, color: t.accentText, border: 'none',
+              fontWeight: 600, cursor: 'pointer', fontSize: 14,
+            }}>OK</button>
+          )}
+        </div>
+
+        <button onClick={selectNone} style={{
+          display: 'flex', alignItems: 'center', gap: 12,
+          padding: '14px 16px', marginTop: 4,
+          borderRadius: t.radius.md,
+          background: noneSelected ? t.successSoft : t.surface,
+          color: t.text,
+          border: `1.5px solid ${noneSelected ? t.success : t.border}`,
+          cursor: 'pointer', textAlign: 'left',
+          fontFamily: t.fontBody, fontSize: 15, fontWeight: 600,
+        }}>
+          <span style={{fontSize: 18}}>✅</span>
+          <span style={{flex: 1}}>Ничего из этого</span>
+          {noneSelected && <Icon name="check" size={18} stroke={t.success} sw={2.5}/>}
+        </button>
+      </div>
+
+      <div style={{marginTop: 12}}>
+        <Button t={t} onClick={handleNext} icon={<Icon name="arrow" size={20}/>} style={{width: '100%'}}>
+          {noneSelected ? 'Продолжить' : sel.size > 0 ? `Исключить · ${sel.size}` : 'Продолжить'}
         </Button>
       </div>
     </div>
@@ -418,4 +584,5 @@ window.ZonesScreen = ZonesScreen;
 window.StatsScreen = StatsScreen;
 window.ActivityScreen = ActivityScreen;
 window.RestrictionsScreen = RestrictionsScreen;
+window.BlacklistScreen = BlacklistScreen;
 window.SignupScreen = SignupScreen;
