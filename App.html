@@ -42,6 +42,273 @@
     flex-direction: column;
   }
 
+  .dev-layout {
+    flex: 1;
+    display: flex;
+    height: 100dvh;
+    min-height: 100dvh;
+    overflow: hidden;
+  }
+
+  .dev-layout__main {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    position: relative;
+    height: 100dvh;
+  }
+
+  .dev-nav-toggle {
+    position: absolute;
+    top: max(10px, env(safe-area-inset-top));
+    left: 10px;
+    z-index: 50;
+    padding: 8px 12px;
+    border-radius: 999px;
+    border: 1px solid oklch(88% 0.005 60);
+    background: rgba(255, 255, 255, 0.92);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    font-size: 12px;
+    font-weight: 600;
+    color: oklch(30% 0.02 50);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+    touch-action: manipulation;
+  }
+
+  .dev-nav-backdrop {
+    display: none;
+  }
+
+  .dev-nav {
+    width: 272px;
+    flex-shrink: 0;
+    background: #fff;
+    border-right: 1px solid oklch(92% 0.005 60);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    z-index: 100;
+  }
+
+  .dev-nav__header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    padding: 16px 16px 12px;
+    border-bottom: 1px solid oklch(94% 0.005 60);
+  }
+
+  .dev-nav__title {
+    font-family: 'Space Grotesk', sans-serif;
+    font-weight: 700;
+    font-size: 15px;
+    letter-spacing: -0.02em;
+  }
+
+  .dev-nav__subtitle {
+    font-size: 11px;
+    color: oklch(52% 0.02 50);
+    margin-top: 2px;
+  }
+
+  .dev-nav__close {
+    display: none;
+    width: 32px;
+    height: 32px;
+    border: none;
+    border-radius: 8px;
+    background: oklch(96% 0.005 60);
+    font-size: 20px;
+    line-height: 1;
+    color: oklch(40% 0.02 50);
+  }
+
+  .dev-nav__current {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    padding: 10px 16px;
+    background: oklch(97% 0.008 60);
+    font-size: 12px;
+  }
+
+  .dev-nav__current-label {
+    font-weight: 600;
+    color: oklch(25% 0.02 50);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .dev-nav__current-num {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: oklch(55% 0.02 50);
+    flex-shrink: 0;
+  }
+
+  .dev-nav__steps {
+    display: flex;
+    gap: 6px;
+    padding: 8px 16px 12px;
+    border-bottom: 1px solid oklch(94% 0.005 60);
+  }
+
+  .dev-nav__steps button {
+    flex: 1;
+    height: 36px;
+    border-radius: 8px;
+    border: 1px solid oklch(90% 0.005 60);
+    background: #fff;
+    font-size: 16px;
+    font-weight: 600;
+  }
+
+  .dev-nav__steps button:disabled {
+    opacity: 0.35;
+    cursor: not-allowed;
+  }
+
+  .dev-nav__overlays {
+    padding: 12px 16px;
+    border-bottom: 1px solid oklch(94% 0.005 60);
+  }
+
+  .dev-nav__section-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9px;
+    letter-spacing: 0.12em;
+    color: oklch(55% 0.02 50);
+    text-transform: uppercase;
+    margin-bottom: 8px;
+  }
+
+  .dev-nav__overlay-btns {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+
+  .dev-nav__overlay-btns button {
+    padding: 6px 10px;
+    border-radius: 999px;
+    border: 1px solid oklch(88% 0.02 25);
+    background: oklch(96% 0.02 25);
+    color: oklch(45% 0.08 25);
+    font-size: 11px;
+    font-weight: 600;
+  }
+
+  .dev-nav__list {
+    flex: 1;
+    overflow: auto;
+    padding: 8px 0 16px;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .dev-nav__group {
+    padding: 0 10px;
+    margin-bottom: 4px;
+  }
+
+  .dev-nav__group-head {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 6px 4px;
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 11px;
+    font-weight: 600;
+    color: oklch(35% 0.02 50);
+  }
+
+  .dev-nav__dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 3px;
+  }
+
+  .dev-nav__count {
+    margin-left: auto;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9px;
+    color: oklch(60% 0.02 50);
+  }
+
+  .dev-nav__item {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 10px;
+    margin-bottom: 2px;
+    border: none;
+    border-radius: 8px;
+    background: transparent;
+    text-align: left;
+    font-size: 12px;
+    color: oklch(38% 0.02 50);
+    cursor: pointer;
+  }
+
+  .dev-nav__item:hover {
+    background: oklch(97% 0.005 60);
+  }
+
+  .dev-nav__item--active {
+    background: oklch(96% 0.02 25);
+    color: oklch(22% 0.02 50);
+    font-weight: 600;
+  }
+
+  .dev-nav__item-num {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9px;
+    color: oklch(62% 0.02 50);
+    min-width: 20px;
+  }
+
+  .dev-nav__item--active .dev-nav__item-num {
+    color: oklch(68% 0.18 25);
+  }
+
+  @media (max-width: 899px) {
+    .dev-nav {
+      position: fixed;
+      left: 0;
+      top: 0;
+      bottom: 0;
+      box-shadow: 8px 0 32px rgba(0, 0, 0, 0.12);
+    }
+
+    .dev-nav-backdrop {
+      display: block;
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.35);
+      z-index: 99;
+    }
+
+    .dev-nav__close {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+  }
+
+  @media (min-width: 900px) {
+    .dev-layout:not(:has(.dev-nav)) .dev-nav-toggle {
+      left: 10px;
+    }
+
+    .dev-layout__main .app-shell {
+      max-width: 420px;
+    }
+  }
+
   .boot-loader {
     flex: 1;
     display: flex;
@@ -164,6 +431,7 @@
   <script type="text/babel" src="components/ui.jsx"></script>
   <script type="text/babel" src="components/AppShell.jsx"></script>
   <script type="text/babel" src="components/TabBar.jsx"></script>
+  <script type="text/babel" src="components/DevNav.jsx"></script>
 
   <script type="text/babel" src="components/screens/Onboarding.jsx"></script>
   <script type="text/babel" src="components/screens/OnboardingQ.jsx"></script>

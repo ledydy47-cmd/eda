@@ -37,6 +37,19 @@ function FloraeApp() {
       return saved || DEFAULT_DINNER;
     } catch { return DEFAULT_DINNER; }
   });
+  const [devNavOpen, setDevNavOpenRaw] = React.useState(() => {
+    const saved = localStorage.getItem('florae_dev_nav');
+    if (saved !== null) return saved === '1';
+    return typeof window !== 'undefined' && window.innerWidth >= 900;
+  });
+
+  const setDevNavOpen = (value) => {
+    setDevNavOpenRaw(prev => {
+      const next = typeof value === 'function' ? value(prev) : value;
+      localStorage.setItem('florae_dev_nav', next ? '1' : '0');
+      return next;
+    });
+  };
 
   const setScreenId = (id) => {
     if (VALID_SCREENS.has(id)) setScreenIdRaw(id);
@@ -121,27 +134,54 @@ function FloraeApp() {
   };
 
   return (
-    <AppShell t={t}>
-      <div className="app-screen">
-        {renderScreen()}
-        {sheet === 'meal' && (
-          <MealSheet t={t}
-            mealTitle={dinner.title}
-            onClose={() => setSheet(null)}
-            onDone={completeTask}
-            onReplace={openReplace}/>
-        )}
-        {replaceOpen && (
-          <ReplaceMealSheet t={t}
-            currentTitle={dinner.title}
-            currentId={dinner.id}
-            onClose={() => setReplaceOpen(false)}
-            onSelect={applyReplacement}/>
-        )}
-        {reward && <RewardOverlay t={t} onClose={() => setReward(false)}/>}
+    <div className="dev-layout">
+      {devNavOpen && (
+        <>
+          <div className="dev-nav-backdrop" onClick={() => setDevNavOpen(false)}/>
+          <DevNav
+            screenId={screenId}
+            setScreenId={goto}
+            onClose={() => setDevNavOpen(false)}
+            onOpenSheet={() => { setSheet('meal'); setReplaceOpen(false); }}
+            onOpenReplace={() => { setReplaceOpen(true); setSheet(null); }}
+            onOpenReward={() => { setReward(true); setSheet(null); setReplaceOpen(false); }}
+          />
+        </>
+      )}
+
+      <div className="dev-layout__main">
+        <button
+          type="button"
+          className="dev-nav-toggle"
+          onClick={() => setDevNavOpen(v => !v)}
+          aria-expanded={devNavOpen}
+        >
+          ☰ Экраны
+        </button>
+
+        <AppShell t={t}>
+          <div className="app-screen">
+            {renderScreen()}
+            {sheet === 'meal' && (
+              <MealSheet t={t}
+                mealTitle={dinner.title}
+                onClose={() => setSheet(null)}
+                onDone={completeTask}
+                onReplace={openReplace}/>
+            )}
+            {replaceOpen && (
+              <ReplaceMealSheet t={t}
+                currentTitle={dinner.title}
+                currentId={dinner.id}
+                onClose={() => setReplaceOpen(false)}
+                onSelect={applyReplacement}/>
+            )}
+            {reward && <RewardOverlay t={t} onClose={() => setReward(false)}/>}
+          </div>
+          {isMainTab && <TabBar t={t} active={tabValue} onChange={handleTabChange}/>}
+        </AppShell>
       </div>
-      {isMainTab && <TabBar t={t} active={tabValue} onChange={handleTabChange}/>}
-    </AppShell>
+    </div>
   );
 }
 
