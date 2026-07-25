@@ -173,14 +173,21 @@ function MealSheet({t, onClose, onDone, onReplace, onOpenFullRecipe, recipe = DE
         padding: '10px 0 0',
         display: 'flex', flexDirection: 'column',
         maxHeight: '85%',
+        minHeight: 0,
         animation: 'slideUp 0.3s cubic-bezier(0.2, 0.9, 0.3, 1)',
       }}>
         <div style={{
           width: 40, height: 4, borderRadius: 2,
-          background: t.borderStrong, margin: '0 auto 8px',
+          background: t.borderStrong, margin: '0 auto 8px', flexShrink: 0,
         }}/>
-        <div style={{overflow: 'auto', padding: '8px 24px 20px'}}>
-          <PhotoSlot t={t} h={180} radius={t.radius.lg} label={`фото · ${recipe.name}`} tone={tone}/>
+        <div style={{
+          flex: 1,
+          minHeight: 0,
+          overflow: 'auto',
+          WebkitOverflowScrolling: 'touch',
+          padding: '8px 24px 20px',
+        }}>
+          <PhotoSlot t={t} h={180} radius={t.radius.lg} label={`фото · ${recipe.name}`} tone={tone} src={recipe.image} alt={recipe.name}/>
 
           <div style={{marginTop: 16, display: 'flex', alignItems: 'center', gap: 6}}>
             <div style={{fontFamily: '"JetBrains Mono", monospace', fontSize: 10, color: t.textMuted, letterSpacing: '0.14em'}}>
@@ -266,10 +273,10 @@ function RecipeScreen({t, onBack, onDone, onReplace, recipe = DEFAULT_DINNER_REC
   const steps = recipe.steps || [];
 
   return (
-    <div style={{flex: 1, display: 'flex', flexDirection: 'column'}}>
+    <div style={{flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0, overflow: 'hidden'}}>
       {/* Заголовочное фото */}
-      <div style={{position: 'relative'}}>
-        <PhotoSlot t={t} h={280} radius={0} label={`фото · ${recipe.name}`} tone={tone}/>
+      <div style={{position: 'relative', flexShrink: 0}}>
+        <PhotoSlot t={t} h={280} radius={0} label={`фото · ${recipe.name}`} tone={tone} src={recipe.image} alt={recipe.name}/>
         <button onClick={onBack} style={{
           position: 'absolute', top: 12, left: 20, width: 42, height: 42,
           borderRadius: 22, background: 'rgba(255,255,255,0.92)',
@@ -288,7 +295,13 @@ function RecipeScreen({t, onBack, onDone, onReplace, recipe = DEFAULT_DINNER_REC
         </button>
       </div>
 
-      <div style={{flex: 1, overflow: 'auto', padding: '20px 24px 20px'}}>
+      <div style={{
+        flex: 1,
+        minHeight: 0,
+        overflow: 'auto',
+        WebkitOverflowScrolling: 'touch',
+        padding: '20px 24px 24px',
+      }}>
         <div style={{display: 'flex', alignItems: 'center', gap: 6}}>
           <div style={{fontFamily: '"JetBrains Mono", monospace', fontSize: 10, color: t.accent, letterSpacing: '0.14em'}}>
             {mealLabel} · {recipe.prep_time_min} МИН
@@ -391,7 +404,15 @@ function RecipeScreen({t, onBack, onDone, onReplace, recipe = DEFAULT_DINNER_REC
         )}
       </div>
 
-      <div style={{padding: '12px 24px calc(12px + env(safe-area-inset-bottom, 0px))', borderTop: `1px solid ${t.border}`, background: t.surface, display: 'flex', flexDirection: 'column', gap: 8}}>
+      <div style={{
+        flexShrink: 0,
+        padding: '12px 24px calc(12px + env(safe-area-inset-bottom, 0px))',
+        borderTop: `1px solid ${t.border}`,
+        background: t.surface,
+        display: 'flex',
+        flexDirection: 'column',
+        gap: 8,
+      }}>
         {onReplace && (
           <button onClick={onReplace} style={{
             width: '100%', padding: '12px', borderRadius: t.radius.md,

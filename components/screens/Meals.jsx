@@ -100,7 +100,7 @@ function MealsScreen({
                 cursor: m.canOpen ? 'pointer' : 'default', fontFamily: t.fontBody,
               }}
             >
-              <PhotoSlot t={t} w={72} h={72} radius={t.radius.md} label={m.tag} tone={m.tone} style={{flexShrink: 0}}/>
+              <PhotoSlot t={t} w={72} h={72} radius={t.radius.md} label={m.tag} tone={m.tone} src={m.id === 'breakfast' ? breakfast?.image : undefined} alt={m.title} style={{flexShrink: 0}}/>
               <div style={{flex: 1, minWidth: 0}}>
                 <div style={{display: 'flex', alignItems: 'center', gap: 6}}>
                   <div style={{fontFamily: '"JetBrains Mono", monospace', fontSize: 10, color: t.textMuted, letterSpacing: '0.06em'}}>{m.time}</div>

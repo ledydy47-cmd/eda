@@ -4,6 +4,17 @@ const BREAKFAST_BATCH_URL = 'data/breakfast_regular_300kcal_batch_01.json';
 
 const DEFAULT_BREAKFAST_ID = 'breakfast_regular_300kcal_001';
 
+const RECIPE_IMAGES = {
+  breakfast_regular_300kcal_001: 'assets/recipes/breakfast-omelet-pepper.png',
+};
+
+function enrichRecipe(recipe) {
+  return {
+    ...recipe,
+    image: recipe.image || RECIPE_IMAGES[recipe.id] || null,
+  };
+}
+
 function getRecipeTone(recipe) {
   if (recipe.is_hot) return 'warm';
   if ((recipe.tags || []).some(t => /холод/i.test(t))) return 'green';
@@ -28,6 +39,7 @@ function recipeToListItem(recipe) {
     tag: mealTypeLabel(recipe.meal_type),
     prep_time_min: recipe.prep_time_min,
     meal_type: recipe.meal_type,
+    image: recipe.image || RECIPE_IMAGES[recipe.id] || null,
   };
 }
 
@@ -67,7 +79,7 @@ function loadBreakfastRecipes() {
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       return res.json();
     })
-    .then(data => data.recipes || []);
+    .then(data => (data.recipes || []).map(enrichRecipe));
 }
 
 function getStoredMealSelection(key, defaultId) {
