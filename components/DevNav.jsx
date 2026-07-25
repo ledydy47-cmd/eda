@@ -47,7 +47,7 @@ function DevNav({screenId, setScreenId, onOpenSheet, onOpenReplace, onOpenReward
     <aside className="dev-nav" aria-label="Навигация для разработки">
       <div className="dev-nav__header">
         <div>
-          <div className="dev-nav__title">florae · dev</div>
+          <div className="dev-nav__title">Стройно · dev</div>
           <div className="dev-nav__subtitle">Переключение экранов</div>
         </div>
       </div>

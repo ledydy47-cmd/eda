@@ -28,7 +28,7 @@ function SplashScreen({t, onNext, onLogin}) {
           <Icon name="leaf" size={20} stroke={t.accentText}/>
         </div>
         <div style={{fontFamily: t.fontDisplay, fontWeight: t.displayWeight, fontSize: 20, fontStyle: t.displayItalic ? 'italic' : 'normal', letterSpacing: '-0.02em'}}>
-          florae
+          Стройно
         </div>
       </div>
 
@@ -189,9 +189,9 @@ function GoalSelectScreen({t, onNext, onBack}) {
               aspectRatio: '1',
               padding: 16,
               borderRadius: t.radius.lg,
-              background: on ? t.text : t.surface,
-              color: on ? t.bg : t.text,
-              border: `1.5px solid ${on ? t.text : t.border}`,
+              background: on ? t.selectBg : t.surface,
+              color: t.text,
+              border: `1.5px solid ${on ? t.selectBorder : t.border}`,
               cursor: 'pointer',
               display: 'flex',
               flexDirection: 'column',
@@ -199,19 +199,19 @@ function GoalSelectScreen({t, onNext, onBack}) {
               justifyContent: 'space-between',
               fontFamily: t.fontBody,
               textAlign: 'left',
-              boxShadow: on ? t.shadowLg : 'none',
+              boxShadow: on ? `0 4px 16px -8px ${t.selectBorder}44` : 'none',
               transition: 'all 0.2s',
             }}>
               <div style={{
                 width: 44, height: 44, borderRadius: t.radius.md,
-                background: on ? 'rgba(255,255,255,0.12)' : t.bgSubtle,
+                background: on ? '#fff' : t.bgSubtle,
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
               }}>
-                <Icon name={g.icon} size={22} stroke={on ? t.bg : t.accent}/>
+                <Icon name={g.icon} size={22} stroke={t.accent}/>
               </div>
               <div>
                 <div style={{fontFamily: t.fontDisplay, fontWeight: t.displayWeight, fontStyle: t.displayItalic ? 'italic' : 'normal', fontSize: 20, letterSpacing: '-0.02em', lineHeight: 1.1}}>{g.title}</div>
-                <div style={{fontSize: 12.5, marginTop: 4, opacity: on ? 0.7 : 0.6}}>{g.sub}</div>
+                <div style={{fontSize: 12.5, marginTop: 4, color: on ? t.textMuted : t.textMuted}}>{g.sub}</div>
               </div>
               {on && (
                 <div style={{position: 'absolute', top: 14, right: 14, width: 22, height: 22, borderRadius: 22, background: t.accent, display: 'flex', alignItems: 'center', justifyContent: 'center'}}>
@@ -467,7 +467,7 @@ function PaywallScreen({t, onNext, onBack}) {
               fontFamily: '"JetBrains Mono", monospace', fontSize: 10,
               letterSpacing: '0.14em', textTransform: 'uppercase',
             }}>
-              <Icon name="sparkle" size={12}/> Florae PRO
+              <Icon name="sparkle" size={12}/> Стройно PRO
             </div>
             <Display t={t} size={30} style={{color: t.bg, marginTop: 16}}>
               Полный доступ<br/>к твоей программе

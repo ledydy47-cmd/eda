@@ -74,6 +74,9 @@ const THEMES = {
     accent: 'oklch(68% 0.18 25)',         // коралл
     accentSoft: 'oklch(93% 0.05 25)',
     accentText: '#ffffff',
+    selectBg: 'oklch(94% 0.06 155)',
+    selectBorder: 'oklch(58% 0.12 155)',
+    selectRing: 'oklch(90% 0.05 155)',
     success: 'oklch(62% 0.14 155)',
     successSoft: 'oklch(90% 0.06 155)',
     warn: 'oklch(75% 0.15 80)',

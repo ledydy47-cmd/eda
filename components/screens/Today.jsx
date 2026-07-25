@@ -1,6 +1,42 @@
 // Главный экран «Сегодня»
 
+const WATER_GOAL_ML = 2000;
+const WATER_GLASS_ML = 200;
+const WATER_GLASSES = WATER_GOAL_ML / WATER_GLASS_ML;
+
+function WaterGlass({filled, t, onClick}) {
+  return (
+    <button type="button" onClick={onClick} aria-label={filled ? 'Стакан выпит' : 'Добавить 200 мл'} style={{
+      flex: 1, minWidth: 0, background: 'none', border: 'none', padding: '2px 1px',
+      cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2,
+    }}>
+      <svg width="28" height="36" viewBox="0 0 28 36" fill="none" aria-hidden="true">
+        <path
+          d="M9 3h10l1.2 2H7.8L9 3zm-1.1 5h12.2l-1.8 24.5a2 2 0 01-2 1.8H10.9a2 2 0 01-2-1.8L7.1 8z"
+          fill={filled ? t.accent : 'transparent'}
+          stroke={filled ? t.accent : t.borderStrong}
+          strokeWidth="1.6"
+          strokeLinejoin="round"
+        />
+        {filled && (
+          <path d="M10 24c2-3 4-3 6 0s4 3 6 0" stroke="rgba(255,255,255,0.55)" strokeWidth="1.2" strokeLinecap="round"/>
+        )}
+      </svg>
+    </button>
+  );
+}
+
 function TodayScreen({t, onOpenMeal, onOpenWorkout, onOpenBeauty, dinnerTitle = 'Куриная грудка с брокколи'}) {
+  const [waterMl, setWaterMl] = React.useState(1200);
+  const filledGlasses = Math.min(WATER_GLASSES, Math.floor(waterMl / WATER_GLASS_ML));
+  const waterLiters = (waterMl / 1000).toFixed(1);
+  const waterPercent = Math.round((waterMl / WATER_GOAL_ML) * 100);
+
+  const handleGlassClick = (index) => {
+    const target = (index + 1) * WATER_GLASS_ML;
+    setWaterMl(prev => prev >= target ? index * WATER_GLASS_ML : target);
+  };
+
   return (
     <div style={{flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden'}}>
       {/* Верх с датой */}
@@ -157,35 +193,28 @@ function TodayScreen({t, onOpenMeal, onOpenWorkout, onOpenBeauty, dinnerTitle = 
             <div>
               <div style={{fontSize: 11, color: t.textMuted, letterSpacing: '0.06em', fontWeight: 600, textTransform: 'uppercase'}}>Вода</div>
               <div style={{marginTop: 6, display: 'flex', alignItems: 'baseline', gap: 6}}>
-                <span style={{fontFamily: t.fontDisplay, fontWeight: t.displayWeight, fontStyle: t.displayItalic ? 'italic' : 'normal', fontSize: 30, letterSpacing: '-0.02em'}}>1.2</span>
+                <span style={{fontFamily: t.fontDisplay, fontWeight: t.displayWeight, fontStyle: t.displayItalic ? 'italic' : 'normal', fontSize: 30, letterSpacing: '-0.02em'}}>{waterLiters}</span>
                 <span style={{fontSize: 14, color: t.textMuted}}>/ 2.0 л</span>
               </div>
             </div>
             <div style={{color: t.accent, display: 'flex', alignItems: 'center', gap: 4, fontSize: 12, fontWeight: 600}}>
               <Icon name="droplet" size={14} stroke={t.accent} fill={t.accent}/>
-              60%
+              {waterPercent}%
             </div>
           </div>
 
-          {/* 8 стаканов */}
-          <div style={{display: 'flex', gap: 6, marginTop: 12}}>
-            {[1,1,1,1,1,0,0,0].map((v, i) => (
-              <div key={i} style={{
-                flex: 1, height: 26,
-                borderRadius: 6,
-                border: `1.5px solid ${v ? t.accent : t.border}`,
-                background: v ? t.accent : 'transparent',
-              }}/>
-            ))}
+          <div style={{marginTop: 14, fontSize: 11.5, color: t.textMuted}}>
+            Нажми на стакан — +200 мл
           </div>
 
-          <div style={{display: 'flex', gap: 8, marginTop: 12}}>
-            {['+200 мл', '+350 мл', '+500 мл'].map(l => (
-              <button key={l} style={{
-                flex: 1, height: 34, borderRadius: t.radius.sm,
-                background: t.bgSubtle, border: 'none', cursor: 'pointer',
-                fontFamily: t.fontBody, fontSize: 12.5, fontWeight: 600, color: t.text,
-              }}>{l}</button>
+          <div style={{display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: 4, marginTop: 10}}>
+            {Array.from({length: WATER_GLASSES}, (_, i) => (
+              <WaterGlass
+                key={i}
+                filled={i < filledGlasses}
+                t={t}
+                onClick={() => handleGlassClick(i)}
+              />
             ))}
           </div>
         </div>

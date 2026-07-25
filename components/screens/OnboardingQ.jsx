@@ -38,18 +38,18 @@ function ZonesScreen({t, onNext, onBack}) {
               display: 'flex', alignItems: 'center', gap: 12,
               padding: '14px 16px',
               borderRadius: t.radius.md,
-              background: on ? t.text : t.surface,
-              color: on ? t.bg : t.text,
-              border: `1.5px solid ${on ? t.text : t.border}`,
+              background: on ? t.selectBg : t.surface,
+              color: t.text,
+              border: `1.5px solid ${on ? t.selectBorder : t.border}`,
               cursor: 'pointer', textAlign: 'left',
               fontFamily: t.fontBody,
             }}>
               <div style={{
                 width: 36, height: 36, borderRadius: 12,
-                background: on ? 'rgba(255,255,255,0.14)' : t.accentSoft,
+                background: on ? '#fff' : t.accentSoft,
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
               }}>
-                <Icon name={z.i} size={18} stroke={on ? t.bg : t.accent}/>
+                <Icon name={z.i} size={18} stroke={t.accent}/>
               </div>
               <div style={{flex: 1, fontSize: 15, fontWeight: 500, letterSpacing: '-0.01em'}}>{z.l}</div>
               <div style={{
@@ -100,9 +100,9 @@ function StatsScreen({t, onNext, onBack}) {
           return (
             <button key={g.id} onClick={() => setGender(g.id)} style={{
               flex: 1, padding: '14px 12px', borderRadius: t.radius.md,
-              background: on ? t.text : t.surface,
-              color: on ? t.bg : t.text,
-              border: `1.5px solid ${on ? t.text : t.border}`,
+              background: on ? t.selectBg : t.surface,
+              color: t.text,
+              border: `1.5px solid ${on ? t.selectBorder : t.border}`,
               cursor: 'pointer',
               fontFamily: t.fontBody, fontSize: 15, fontWeight: 600,
             }}>{g.l}</button>
@@ -227,21 +227,21 @@ function ActivityScreen({t, onNext, onBack}) {
           return (
             <button key={i} onClick={() => setSel(i)} style={{
               padding: 16, borderRadius: t.radius.lg,
-              background: on ? t.text : t.surface,
-              color: on ? t.bg : t.text,
-              border: `1.5px solid ${on ? t.text : t.border}`,
+              background: on ? t.selectBg : t.surface,
+              color: t.text,
+              border: `1.5px solid ${on ? t.selectBorder : t.border}`,
               cursor: 'pointer', textAlign: 'left',
               display: 'flex', alignItems: 'center', gap: 14,
               fontFamily: t.fontBody,
-              boxShadow: on ? t.shadow : 'none',
+              boxShadow: on ? `0 4px 16px -8px ${t.selectBorder}33` : 'none',
             }}>
               <div style={{
                 width: 44, height: 44, borderRadius: 14,
-                background: on ? 'rgba(255,255,255,0.14)' : t.accentSoft,
+                background: on ? '#fff' : t.accentSoft,
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
                 flexShrink: 0,
               }}>
-                <Icon name={l.i} size={20} stroke={on ? t.bg : t.accent}/>
+                <Icon name={l.i} size={20} stroke={t.accent}/>
               </div>
               <div style={{flex: 1}}>
                 <div style={{fontFamily: t.fontDisplay, fontWeight: t.displayWeight, fontStyle: t.displayItalic ? 'italic' : 'normal', fontSize: 18, letterSpacing: '-0.02em'}}>{l.title}</div>
@@ -308,9 +308,9 @@ function RestrictionsScreen({t, onNext, onBack}) {
               display: 'flex', alignItems: 'center', gap: 12,
               padding: '14px 16px',
               borderRadius: t.radius.md,
-              background: on ? t.text : t.surface,
-              color: on ? t.bg : t.text,
-              border: `1.5px solid ${on ? t.text : t.border}`,
+              background: on ? t.selectBg : t.surface,
+              color: t.text,
+              border: `1.5px solid ${on ? t.selectBorder : t.border}`,
               cursor: 'pointer', textAlign: 'left',
               fontFamily: t.fontBody, fontSize: 15, fontWeight: 500,
               letterSpacing: '-0.01em',
@@ -408,9 +408,9 @@ function BlacklistScreen({t, onNext, onBack}) {
               display: 'flex', alignItems: 'center', gap: 12,
               padding: '13px 16px',
               borderRadius: t.radius.md,
-              background: on ? t.text : t.surface,
-              color: on ? t.bg : t.text,
-              border: `1.5px solid ${on ? t.text : t.border}`,
+              background: on ? t.selectBg : t.surface,
+              color: t.text,
+              border: `1.5px solid ${on ? t.selectBorder : t.border}`,
               cursor: 'pointer', textAlign: 'left',
               fontFamily: t.fontBody, fontSize: 15, fontWeight: 500,
             }}>
@@ -435,9 +435,9 @@ function BlacklistScreen({t, onNext, onBack}) {
             <button key={id} onClick={() => toggle(id)} style={{
               display: 'flex', alignItems: 'center', gap: 12,
               padding: '13px 16px', borderRadius: t.radius.md,
-              background: on ? t.text : t.surface,
-              color: on ? t.bg : t.text,
-              border: `1.5px solid ${on ? t.text : t.border}`,
+              background: on ? t.selectBg : t.surface,
+              color: t.text,
+              border: `1.5px solid ${on ? t.selectBorder : t.border}`,
               cursor: 'pointer', textAlign: 'left', fontFamily: t.fontBody, fontSize: 15,
             }}>
               <span style={{fontSize: 20}}>✏️</span>
