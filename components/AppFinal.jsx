@@ -31,6 +31,14 @@ function FloraeApp() {
   const [sheet, setSheet] = React.useState(null);
   const [reward, setReward] = React.useState(false);
   const [replaceOpen, setReplaceOpen] = React.useState(false);
+  const [replaceMealKey, setReplaceMealKey] = React.useState('d');
+  const [activeRecipeKey, setActiveRecipeKey] = React.useState('d');
+  const [breakfastRecipes, setBreakfastRecipes] = React.useState([]);
+  const [recipesLoading, setRecipesLoading] = React.useState(true);
+  const [recipesError, setRecipesError] = React.useState(null);
+  const [breakfast, setBreakfast] = React.useState(() =>
+    RecipeData.getStoredMealSelection('florae_breakfast', RecipeData.DEFAULT_BREAKFAST_ID)
+  );
   const [dinner, setDinner] = React.useState(() => {
     try {
       const saved = JSON.parse(localStorage.getItem('florae_dinner') || 'null');
@@ -45,6 +53,47 @@ function FloraeApp() {
 
   React.useEffect(() => { localStorage.setItem('florae_screen', screenId); }, [screenId]);
   React.useEffect(() => { localStorage.setItem('florae_dinner', JSON.stringify(dinner)); }, [dinner]);
+  React.useEffect(() => { localStorage.setItem('florae_breakfast', JSON.stringify(breakfast)); }, [breakfast]);
+
+  React.useEffect(() => {
+    RecipeData.loadBreakfastRecipes()
+      .then(recipes => {
+        setBreakfastRecipes(recipes);
+        setRecipesError(null);
+        setBreakfast(prev => {
+          if (recipes.some(r => r.id === prev.id)) return prev;
+          const fallback = recipes[0];
+          return fallback ? RecipeData.recipeToListItem(fallback) : prev;
+        });
+      })
+      .catch(err => setRecipesError(err.message || 'Не удалось загрузить рецепты'))
+      .finally(() => setRecipesLoading(false));
+  }, []);
+
+  const breakfastPool = React.useMemo(
+    () => breakfastRecipes.map(RecipeData.recipeToListItem),
+    [breakfastRecipes]
+  );
+
+  const breakfastRecipeFull = React.useMemo(
+    () => RecipeData.findRecipeById(breakfastRecipes, breakfast.id) || breakfastRecipes[0] || null,
+    [breakfastRecipes, breakfast.id]
+  );
+
+  const breakfastCard = React.useMemo(() => {
+    if (breakfastRecipeFull) return RecipeData.recipeToListItem(breakfastRecipeFull);
+    return breakfast.id ? breakfast : null;
+  }, [breakfastRecipeFull, breakfast]);
+
+  const dinnerRecipeFull = React.useMemo(() => ({
+    ...DEFAULT_DINNER_RECIPE,
+    name: dinner.title,
+    calories: dinner.kcal,
+  }), [dinner.title, dinner.kcal]);
+
+  const activeRecipe = activeRecipeKey === 'breakfast'
+    ? (breakfastRecipeFull || DEFAULT_DINNER_RECIPE)
+    : dinnerRecipeFull;
 
   const goto = id => setScreenId(id);
   const isMainTab = MAIN_TAB_SCREENS.includes(screenId);
@@ -73,13 +122,40 @@ function FloraeApp() {
     setTimeout(() => setReward(false), 3800);
   };
 
-  const openReplace = () => setReplaceOpen(true);
+  const openReplace = (mealKey = 'd') => {
+    setReplaceMealKey(mealKey);
+    setReplaceOpen(true);
+  };
+
+  const openRecipe = (mealKey = 'd') => {
+    setActiveRecipeKey(mealKey);
+    goto('recipe');
+  };
 
   const applyReplacement = (recipe) => {
-    setDinner({ id: recipe.id, title: recipe.title, kcal: recipe.kcal });
+    if (replaceMealKey === 'breakfast') {
+      setBreakfast({ id: recipe.id, title: recipe.title, kcal: recipe.kcal });
+      const full = RecipeData.findRecipeById(breakfastRecipes, recipe.id);
+      if (full) RecipeData.saveMealSelection('florae_breakfast', full);
+    } else {
+      setDinner({ id: recipe.id, title: recipe.title, kcal: recipe.kcal });
+    }
     setReplaceOpen(false);
     setSheet(null);
   };
+
+  React.useEffect(() => {
+    if (breakfastRecipeFull) {
+      RecipeData.saveMealSelection('florae_breakfast', breakfastRecipeFull);
+    }
+  }, [breakfastRecipeFull?.id]);
+
+  const replacePool = replaceMealKey === 'breakfast' ? breakfastPool : DINNER_RECIPE_POOL;
+  const replaceCurrentId = replaceMealKey === 'breakfast' ? breakfast.id : dinner.id;
+  const replaceCurrentTitle = replaceMealKey === 'breakfast'
+    ? (breakfastCard?.title || breakfast.title)
+    : dinner.title;
+  const replaceMealLabel = replaceMealKey === 'breakfast' ? 'ЗАВТРАК' : 'УЖИН';
 
   const renderScreen = () => {
     switch (screenId) {
@@ -98,19 +174,21 @@ function FloraeApp() {
       case 'signup': return <SignupScreen t={t} onNext={finishOnboarding} onBack={() => goto('paywall')}/>;
       case 'today': return <TodayScreen t={t}
         dinnerTitle={dinner.title}
-        onOpenMeal={() => setSheet('meal')}
+        onOpenMeal={() => { setActiveRecipeKey('d'); setSheet('meal'); }}
         onOpenWorkout={() => goto('workout-overview')}
         onOpenBeauty={() => goto('beauty')}/>;
       case 'meals': return <MealsScreen t={t}
+        breakfast={breakfastCard}
+        breakfastLoading={recipesLoading}
         dinnerTitle={dinner.title}
         dinnerKcal={dinner.kcal}
-        onOpenRecipe={() => goto('recipe')}
-        onReplaceDinner={openReplace}/>;
+        onOpenRecipe={openRecipe}
+        onReplaceMeal={openReplace}/>;
       case 'recipe': return <RecipeScreen t={t}
-        title={dinner.title}
+        recipe={activeRecipe}
         onBack={() => goto('meals')}
         onDone={completeTask}
-        onReplace={openReplace}/>;
+        onReplace={() => openReplace(activeRecipeKey)}/>;
       case 'workout-overview': return <WorkoutOverviewScreen t={t} onStart={() => goto('workout')} onBack={() => goto('today')}/>;
       case 'workout': return <WorkoutScreen t={t} onBack={() => goto('workout-overview')} onDone={completeTask}/>;
       case 'beauty': return <BeautyScreen t={t}/>;
@@ -125,26 +203,37 @@ function FloraeApp() {
       <DevNav
         screenId={screenId}
         setScreenId={goto}
-        onOpenSheet={() => { setSheet('meal'); setReplaceOpen(false); }}
-        onOpenReplace={() => { setReplaceOpen(true); setSheet(null); }}
+        onOpenSheet={() => { setActiveRecipeKey('d'); setSheet('meal'); setReplaceOpen(false); }}
+        onOpenReplace={() => { setReplaceMealKey('d'); setReplaceOpen(true); setSheet(null); }}
         onOpenReward={() => { setReward(true); setSheet(null); setReplaceOpen(false); }}
       />
 
       <div className="dev-layout__main">
         <AppShell t={t}>
           <div className="app-screen">
+            {recipesError && screenId === 'meals' && (
+              <div style={{
+                padding: '8px 16px', background: t.accentSoft, color: t.text,
+                fontSize: 12, textAlign: 'center', borderBottom: `1px solid ${t.border}`,
+              }}>
+                {recipesError}
+              </div>
+            )}
             {renderScreen()}
             {sheet === 'meal' && (
               <MealSheet t={t}
-                mealTitle={dinner.title}
+                recipe={activeRecipeKey === 'breakfast' ? (breakfastRecipeFull || DEFAULT_DINNER_RECIPE) : dinnerRecipeFull}
                 onClose={() => setSheet(null)}
                 onDone={completeTask}
-                onReplace={openReplace}/>
+                onReplace={() => openReplace(activeRecipeKey)}
+                onOpenFullRecipe={() => { setSheet(null); goto('recipe'); }}/>
             )}
             {replaceOpen && (
               <ReplaceMealSheet t={t}
-                currentTitle={dinner.title}
-                currentId={dinner.id}
+                currentTitle={replaceCurrentTitle}
+                currentId={replaceCurrentId}
+                pool={replacePool}
+                mealLabel={replaceMealLabel}
                 onClose={() => setReplaceOpen(false)}
                 onSelect={applyReplacement}/>
             )}

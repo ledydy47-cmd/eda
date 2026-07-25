@@ -1,6 +1,6 @@
 // Детальные экраны: полный рецепт, обзор тренировки, все награды, bottom sheet ужина, награда
 
-const RECIPE_POOL = [
+const DINNER_RECIPE_POOL = [
   {id: 'salmon-salad', title: 'Салат с лососем и авокадо', kcal: 310, time: '20 мин', tone: 'green', tag: 'Ужин'},
   {id: 'turkey-zucchini', title: 'Индейка с кабачками', kcal: 290, time: '25 мин', tone: 'warm', tag: 'Ужин'},
   {id: 'egg-veg', title: 'Омлет с овощами', kcal: 280, time: '15 мин', tone: 'coral', tag: 'Ужин'},
@@ -9,37 +9,45 @@ const RECIPE_POOL = [
   {id: 'veg-stew', title: 'Тушёные овощи с индейкой', kcal: 295, time: '25 мин', tone: 'green', tag: 'Ужин'},
 ];
 
-function getDislikedRecipes() {
-  try { return JSON.parse(localStorage.getItem('florae_disliked_recipes') || '[]'); }
-  catch { return []; }
-}
-
-function addDislikedRecipe(id) {
-  const list = getDislikedRecipes();
-  if (!list.includes(id)) {
-    list.push(id);
-    localStorage.setItem('florae_disliked_recipes', JSON.stringify(list));
-  }
-}
-
-function getAvailableAlternatives(excludeId) {
-  const disliked = new Set(getDislikedRecipes());
-  if (excludeId) disliked.add(excludeId);
-  return RECIPE_POOL.filter(r => !disliked.has(r.id));
-}
+const DEFAULT_DINNER_RECIPE = {
+  id: 'chicken-broccoli',
+  name: 'Куриная грудка с брокколи',
+  description: 'Лёгкий белковый ужин с нежной курицей и хрустящей брокколи.',
+  meal_type: 'ужин',
+  prep_time_min: 25,
+  calories: 320,
+  protein_g: 38,
+  fat_g: 8,
+  carbs_g: 12,
+  is_hot: true,
+  ingredients: [
+    {name: 'Куриная грудка', amount: 150, unit: 'г'},
+    {name: 'Брокколи', amount: 100, unit: 'г'},
+    {name: 'Морковь', amount: 80, unit: 'г'},
+    {name: 'Оливковое масло', amount: 1, unit: 'ч.л.'},
+    {name: 'Соль, специи', amount: 0, unit: ''},
+  ],
+  steps: [
+    {step: 1, text: 'Нарежь курицу небольшими кубиками, посоли и поперчи.'},
+    {step: 2, text: 'Разогрей сковороду с оливковым маслом на среднем огне.'},
+    {step: 3, text: 'Обжарь курицу 7 минут, помешивая, до золотистой корочки.'},
+    {step: 4, text: 'Добавь нарезанные брокколи и морковь. Туши под крышкой 10 минут.'},
+    {step: 5, text: 'Подавай сразу — с зеленью или лимоном по вкусу.'},
+  ],
+};
 
 // ─── Замена блюда — 3 альтернативы ─────────────
-function ReplaceMealSheet({t, currentTitle, currentId, onClose, onSelect}) {
-  const [options, setOptions] = React.useState(() => getAvailableAlternatives(currentId).slice(0, 3));
+function ReplaceMealSheet({t, currentTitle, currentId, pool = DINNER_RECIPE_POOL, mealLabel = 'УЖИН', onClose, onSelect}) {
+  const [options, setOptions] = React.useState(() => RecipeData.getAvailableAlternatives(pool, currentId).slice(0, 3));
   const [applied, setApplied] = React.useState(false);
   const [selectedTitle, setSelectedTitle] = React.useState('');
 
   const handleDislike = (recipe) => {
-    addDislikedRecipe(recipe.id);
+    RecipeData.addDislikedRecipe(recipe.id);
     setOptions(prev => {
       const next = prev.filter(r => r.id !== recipe.id);
-      const pool = getAvailableAlternatives(currentId).filter(r => !next.some(o => o.id === r.id));
-      if (pool.length > 0 && next.length < 3) next.push(pool[0]);
+      const available = RecipeData.getAvailableAlternatives(pool, currentId).filter(r => !next.some(o => o.id === r.id));
+      if (available.length > 0 && next.length < 3) next.push(available[0]);
       return next;
     });
   };
@@ -70,7 +78,7 @@ function ReplaceMealSheet({t, currentTitle, currentId, onClose, onSelect}) {
 
         <div style={{padding: '0 24px 16px'}}>
           <div style={{fontFamily: '"JetBrains Mono", monospace', fontSize: 10, color: t.textMuted, letterSpacing: '0.14em'}}>
-            ЗАМЕНА · УЖИН
+            ЗАМЕНА · {mealLabel}
           </div>
           <Display t={t} size={22} style={{marginTop: 6}}>
             {applied ? 'Замена применена!' : 'Выбери альтернативу'}
@@ -148,7 +156,9 @@ function ReplaceMealSheet({t, currentTitle, currentId, onClose, onSelect}) {
 }
 
 // ─── Bottom Sheet — карточка ужина/задания ─────────────
-function MealSheet({t, onClose, onDone, onReplace, mealTitle = 'Куриная грудка с брокколи'}) {
+function MealSheet({t, onClose, onDone, onReplace, onOpenFullRecipe, recipe = DEFAULT_DINNER_RECIPE}) {
+  const mealLabel = RecipeData.mealTypeLabel(recipe.meal_type).toUpperCase();
+  const tone = RecipeData.getRecipeTone(recipe);
   return (
     <div style={{
       position: 'absolute', inset: 0, zIndex: 20,
@@ -170,22 +180,24 @@ function MealSheet({t, onClose, onDone, onReplace, mealTitle = 'Куриная �
           background: t.borderStrong, margin: '0 auto 8px',
         }}/>
         <div style={{overflow: 'auto', padding: '8px 24px 20px'}}>
-          <PhotoSlot t={t} h={180} radius={t.radius.lg} label="фото · ужин · курица с брокколи" tone="warm"/>
+          <PhotoSlot t={t} h={180} radius={t.radius.lg} label={`фото · ${recipe.name}`} tone={tone}/>
 
           <div style={{marginTop: 16, display: 'flex', alignItems: 'center', gap: 6}}>
-            <div style={{fontFamily: '"JetBrains Mono", monospace', fontSize: 10, color: t.textMuted, letterSpacing: '0.14em'}}>19:00 · УЖИН</div>
+            <div style={{fontFamily: '"JetBrains Mono", monospace', fontSize: 10, color: t.textMuted, letterSpacing: '0.14em'}}>
+              {recipe.prep_time_min} МИН · {mealLabel}
+            </div>
           </div>
           <Display t={t} size={22} style={{marginTop: 6}}>
-            {mealTitle}
+            {recipe.name}
           </Display>
 
           {/* Метрики */}
           <div style={{marginTop: 14, display: 'flex', gap: 10}}>
             {[
-              {l: 'ккал', v: '320'},
-              {l: 'белки', v: '38г'},
-              {l: 'жиры', v: '8г'},
-              {l: 'углев.', v: '12г'},
+              {l: 'ккал', v: String(recipe.calories)},
+              {l: 'белки', v: `${Math.round(recipe.protein_g)}г`},
+              {l: 'жиры', v: `${Math.round(recipe.fat_g)}г`},
+              {l: 'углев.', v: `${Math.round(recipe.carbs_g)}г`},
             ].map(m => (
               <div key={m.l} style={{flex: 1, padding: '10px 8px', borderRadius: t.radius.md, background: t.surface, border: `1px solid ${t.border}`, textAlign: 'center'}}>
                 <div style={{fontFamily: t.fontDisplay, fontWeight: t.displayWeight, fontStyle: t.displayItalic ? 'italic' : 'normal', fontSize: 18, letterSpacing: '-0.02em'}}>{m.v}</div>
@@ -197,31 +209,28 @@ function MealSheet({t, onClose, onDone, onReplace, mealTitle = 'Куриная �
           {/* Ингредиенты — короткий список */}
           <div style={{marginTop: 20}}>
             <Label t={t}>ИНГРЕДИЕНТЫ · 1 ПОРЦИЯ</Label>
-            {[
-              ['Куриная грудка', '150 г'],
-              ['Брокколи', '100 г'],
-              ['Морковь', '80 г'],
-              ['Оливковое масло', '1 ч.л.'],
-            ].map(([n, q]) => (
-              <div key={n} style={{
+            {(recipe.ingredients || []).slice(0, 4).map(ing => (
+              <div key={ing.name} style={{
                 display: 'flex', justifyContent: 'space-between', padding: '10px 0',
                 borderBottom: `1px solid ${t.border}`, fontSize: 14,
               }}>
-                <span style={{color: t.text}}>{n}</span>
-                <span style={{color: t.textMuted, fontWeight: 500}}>{q}</span>
+                <span style={{color: t.text}}>{ing.name}</span>
+                <span style={{color: t.textMuted, fontWeight: 500}}>{RecipeData.formatIngredientAmount(ing)}</span>
               </div>
             ))}
           </div>
 
-          <button style={{
-            marginTop: 14, width: '100%', padding: '12px', borderRadius: t.radius.md,
-            background: 'transparent', border: `1.5px solid ${t.border}`,
-            color: t.text, cursor: 'pointer',
-            fontFamily: t.fontBody, fontSize: 13.5, fontWeight: 600,
-            display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
-          }}>
-            Полный рецепт <Icon name="arrow" size={16}/>
-          </button>
+          {onOpenFullRecipe && (
+            <button onClick={onOpenFullRecipe} style={{
+              marginTop: 14, width: '100%', padding: '12px', borderRadius: t.radius.md,
+              background: 'transparent', border: `1.5px solid ${t.border}`,
+              color: t.text, cursor: 'pointer',
+              fontFamily: t.fontBody, fontSize: 13.5, fontWeight: 600,
+              display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+            }}>
+              Полный рецепт <Icon name="arrow" size={16}/>
+            </button>
+          )}
 
           {onReplace && (
             <button onClick={onReplace} style={{
@@ -231,7 +240,7 @@ function MealSheet({t, onClose, onDone, onReplace, mealTitle = 'Куриная �
               fontFamily: t.fontBody, fontSize: 13.5, fontWeight: 600,
               display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
             }}>
-              <Icon name="meal" size={16} stroke={t.accent}/> Заменить ужин
+              <Icon name="meal" size={16} stroke={t.accent}/> Заменить {RecipeData.mealTypeLabel(recipe.meal_type).toLowerCase()}
             </button>
           )}
         </div>
@@ -250,13 +259,17 @@ function MealSheet({t, onClose, onDone, onReplace, mealTitle = 'Куриная �
 }
 
 // ─── Экран полного рецепта ─────────────
-function RecipeScreen({t, onBack, onDone, onReplace, title = 'Куриная грудка с брокколи'}) {
+function RecipeScreen({t, onBack, onDone, onReplace, recipe = DEFAULT_DINNER_RECIPE}) {
   const [portions, setPortions] = React.useState(1);
+  const mealLabel = RecipeData.mealTypeLabel(recipe.meal_type).toUpperCase();
+  const tone = RecipeData.getRecipeTone(recipe);
+  const steps = recipe.steps || [];
+
   return (
     <div style={{flex: 1, display: 'flex', flexDirection: 'column'}}>
       {/* Заголовочное фото */}
       <div style={{position: 'relative'}}>
-        <PhotoSlot t={t} h={280} radius={0} label="фото · курица с брокколи · крупным планом" tone="warm"/>
+        <PhotoSlot t={t} h={280} radius={0} label={`фото · ${recipe.name}`} tone={tone}/>
         <button onClick={onBack} style={{
           position: 'absolute', top: 12, left: 20, width: 42, height: 42,
           borderRadius: 22, background: 'rgba(255,255,255,0.92)',
@@ -277,9 +290,15 @@ function RecipeScreen({t, onBack, onDone, onReplace, title = 'Куриная г�
 
       <div style={{flex: 1, overflow: 'auto', padding: '20px 24px 20px'}}>
         <div style={{display: 'flex', alignItems: 'center', gap: 6}}>
-          <div style={{fontFamily: '"JetBrains Mono", monospace', fontSize: 10, color: t.accent, letterSpacing: '0.14em'}}>УЖИН · 25 МИН</div>
+          <div style={{fontFamily: '"JetBrains Mono", monospace', fontSize: 10, color: t.accent, letterSpacing: '0.14em'}}>
+            {mealLabel} · {recipe.prep_time_min} МИН
+          </div>
         </div>
-        <Display t={t} size={28} style={{marginTop: 6}}>{title}</Display>
+        <Display t={t} size={28} style={{marginTop: 6}}>{recipe.name}</Display>
+
+        {recipe.description && (
+          <p style={{marginTop: 10, fontSize: 14, lineHeight: 1.5, color: t.textMuted}}>{recipe.description}</p>
+        )}
 
         {/* Rating */}
         <div style={{marginTop: 12, display: 'flex', alignItems: 'center', gap: 14, fontSize: 13, color: t.textMuted}}>
@@ -288,8 +307,12 @@ function RecipeScreen({t, onBack, onDone, onReplace, title = 'Куриная г�
             <b style={{color: t.text}}>4.8</b>
             <span>· 234 отзыва</span>
           </div>
-          <div style={{width: 3, height: 3, borderRadius: 3, background: t.textFaint}}/>
-          <span>94% рекомендуют</span>
+          {recipe.difficulty && (
+            <>
+              <div style={{width: 3, height: 3, borderRadius: 3, background: t.textFaint}}/>
+              <span>{recipe.difficulty}</span>
+            </>
+          )}
         </div>
 
         {/* KPI карточка */}
@@ -298,10 +321,10 @@ function RecipeScreen({t, onBack, onDone, onReplace, title = 'Куриная г�
           background: t.bgSubtle, display: 'flex',
         }}>
           {[
-            {l: 'ккал', v: 320},
-            {l: 'белки', v: '38г'},
-            {l: 'жиры', v: '8г'},
-            {l: 'углев.', v: '12г'},
+            {l: 'ккал', v: Math.round(recipe.calories * portions)},
+            {l: 'белки', v: `${Math.round(recipe.protein_g * portions)}г`},
+            {l: 'жиры', v: `${Math.round(recipe.fat_g * portions)}г`},
+            {l: 'углев.', v: `${Math.round(recipe.carbs_g * portions)}г`},
           ].map((m, i) => (
             <div key={m.l} style={{
               flex: 1, textAlign: 'center',
@@ -325,20 +348,14 @@ function RecipeScreen({t, onBack, onDone, onReplace, title = 'Куриная г�
 
         {/* Ингредиенты */}
         <div style={{marginTop: 12}}>
-          {[
-            ['Куриная грудка', 150, 'г'],
-            ['Брокколи', 100, 'г'],
-            ['Морковь', 80, 'г'],
-            ['Оливковое масло', 1, 'ч.л.'],
-            ['Соль, специи', 0, 'по вкусу'],
-          ].map(([n, q, u]) => (
-            <div key={n} style={{
+          {(recipe.ingredients || []).map(ing => (
+            <div key={ing.name} style={{
               display: 'flex', justifyContent: 'space-between', padding: '10px 0',
               borderBottom: `1px solid ${t.border}`, fontSize: 14,
             }}>
-              <span style={{color: t.text}}>{n}</span>
+              <span style={{color: t.text}}>{ing.name}</span>
               <span style={{color: t.textMuted, fontWeight: 500}}>
-                {q ? `${q * portions} ${u}` : u}
+                {RecipeData.formatIngredientAmount(ing, portions)}
               </span>
             </div>
           ))}
@@ -347,27 +364,31 @@ function RecipeScreen({t, onBack, onDone, onReplace, title = 'Куриная г�
         {/* Шаги приготовления */}
         <div style={{marginTop: 24}}>
           <Label t={t}>ПРИГОТОВЛЕНИЕ</Label>
-          {[
-            'Нарежь курицу небольшими кубиками, посоли и поперчи.',
-            'Разогрей сковороду с оливковым маслом на среднем огне.',
-            'Обжарь курицу 7 минут, помешивая, до золотистой корочки.',
-            'Добавь нарезанные брокколи и морковь. Туши под крышкой 10 минут.',
-            'Подавай сразу — с зеленью или лимоном по вкусу.',
-          ].map((step, i) => (
-            <div key={i} style={{
+          {steps.map((step, i) => (
+            <div key={step.step || i} style={{
               display: 'flex', gap: 14, padding: '12px 0',
-              borderBottom: i < 4 ? `1px solid ${t.border}` : 'none',
+              borderBottom: i < steps.length - 1 ? `1px solid ${t.border}` : 'none',
             }}>
               <div style={{
                 width: 26, height: 26, borderRadius: 13, flexShrink: 0,
                 background: t.accent, color: t.accentText,
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
                 fontFamily: t.fontDisplay, fontWeight: 700, fontSize: 13,
-              }}>{i + 1}</div>
-              <div style={{fontSize: 14, lineHeight: 1.5, color: t.text, paddingTop: 3}}>{step}</div>
+              }}>{step.step || i + 1}</div>
+              <div style={{fontSize: 14, lineHeight: 1.5, color: t.text, paddingTop: 3}}>{step.text}</div>
             </div>
           ))}
         </div>
+
+        {recipe.tip && (
+          <div style={{
+            marginTop: 20, padding: 14, borderRadius: t.radius.lg,
+            background: t.accentSoft, border: `1px solid ${t.accent}33`,
+          }}>
+            <div style={{fontSize: 11, fontWeight: 600, color: t.accent, letterSpacing: '0.06em', textTransform: 'uppercase'}}>Совет</div>
+            <div style={{marginTop: 6, fontSize: 13.5, lineHeight: 1.5, color: t.text}}>{recipe.tip}</div>
+          </div>
+        )}
       </div>
 
       <div style={{padding: '12px 24px calc(12px + env(safe-area-inset-bottom, 0px))', borderTop: `1px solid ${t.border}`, background: t.surface, display: 'flex', flexDirection: 'column', gap: 8}}>
@@ -379,7 +400,7 @@ function RecipeScreen({t, onBack, onDone, onReplace, title = 'Куриная г�
             fontFamily: t.fontBody, fontSize: 14, fontWeight: 600,
             display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
           }}>
-            <Icon name="meal" size={16} stroke={t.accent}/> Заменить блюдо
+            <Icon name="meal" size={16} stroke={t.accent}/> Заменить {RecipeData.mealTypeLabel(recipe.meal_type).toLowerCase()}
           </button>
         )}
         <Button t={t} onClick={onDone} icon={<Icon name="check" size={18} sw={2.5}/>} style={{width: '100%'}}>
@@ -618,6 +639,8 @@ function RewardOverlay({t, onClose}) {
 window.MealSheet = MealSheet;
 window.ReplaceMealSheet = ReplaceMealSheet;
 window.RecipeScreen = RecipeScreen;
+window.DINNER_RECIPE_POOL = DINNER_RECIPE_POOL;
+window.DEFAULT_DINNER_RECIPE = DEFAULT_DINNER_RECIPE;
 window.WorkoutOverviewScreen = WorkoutOverviewScreen;
 window.AwardsScreen = AwardsScreen;
 window.RewardOverlay = RewardOverlay;
