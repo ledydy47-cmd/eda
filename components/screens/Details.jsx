@@ -77,7 +77,7 @@ function MealSheet({t, onClose, onDone}) {
           </button>
         </div>
 
-        <div style={{padding: '12px 24px 20px', borderTop: `1px solid ${t.border}`, background: t.surface, display: 'flex', gap: 10}}>
+        <div style={{padding: '12px 24px calc(20px + env(safe-area-inset-bottom, 0px))', borderTop: `1px solid ${t.border}`, background: t.surface, display: 'flex', gap: 10}}>
           <Button t={t} variant="secondary" size="lg" style={{flex: '0 0 auto', width: 54, padding: 0}}>
             <Icon name="close" size={20}/>
           </Button>

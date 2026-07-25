@@ -2,28 +2,118 @@
 <html lang="ru">
 <head>
 <meta charset="UTF-8"/>
-<meta name="viewport" content="width=1440"/>
-<title>florae · приложение</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"/>
+<meta name="description" content="florae — программа похудения без диеты. Питание, движение и уход за собой в одном ритме."/>
+<meta name="theme-color" content="#faf9f6"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-status-bar-style" content="default"/>
+<meta name="apple-mobile-web-app-title" content="florae"/>
+<meta name="mobile-web-app-capable" content="yes"/>
+<title>florae — похудение без диеты</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"/>
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400..700;1,9..144,400..700&family=Inter:wght@400;500;600;700&family=Manrope:wght@400;500;600;700;800&family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"/>
 
 <style>
-  * { box-sizing: border-box; }
-  html, body { margin: 0; padding: 0; height: 100%; }
+  *, *::before, *::after { box-sizing: border-box; }
+
+  html {
+    height: 100%;
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
+  }
+
   body {
-    font-family: 'Inter', system-ui, sans-serif;
+    margin: 0;
+    min-height: 100%;
+    min-height: 100dvh;
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
     background: #faf9f6;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     color: oklch(22% 0.04 175);
+    overscroll-behavior: none;
   }
-  button { font-family: inherit; }
-  input { font-family: inherit; }
 
-  ::-webkit-scrollbar { width: 6px; height: 6px; }
-  ::-webkit-scrollbar-track { background: transparent; }
-  ::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.12); border-radius: 3px; }
+  #root {
+    min-height: 100dvh;
+    display: flex;
+    flex-direction: column;
+  }
+
+  button, input, select, textarea {
+    font-family: inherit;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  button { cursor: pointer; }
+
+  /* Полноэкранная оболочка приложения */
+  .app-shell {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    min-height: 100dvh;
+    width: 100%;
+    max-width: 480px;
+    margin: 0 auto;
+    background: var(--app-bg, #faf9f6);
+    color: var(--app-text, oklch(22% 0.04 175));
+    position: relative;
+    overflow: hidden;
+  }
+
+  @media (min-width: 481px) {
+    body {
+      background: oklch(94% 0.008 60);
+    }
+    .app-shell {
+      box-shadow: 0 0 0 1px oklch(90% 0.005 60),
+                  0 24px 80px -24px rgba(0, 0, 0, 0.12);
+    }
+  }
+
+  .app-shell__inner {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    padding-top: env(safe-area-inset-top, 0px);
+  }
+
+  /* Нижняя навигация */
+  .tab-bar {
+    display: flex;
+    justify-content: space-around;
+    align-items: stretch;
+    flex-shrink: 0;
+    backdrop-filter: saturate(180%) blur(20px);
+    -webkit-backdrop-filter: saturate(180%) blur(20px);
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+
+  .tab-bar__item {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 3px;
+    min-height: 56px;
+    padding: 8px 4px max(8px, env(safe-area-inset-bottom, 0px) * 0.3);
+    background: transparent;
+    border: none;
+    font-size: 10.5px;
+    letter-spacing: -0.01em;
+    touch-action: manipulation;
+  }
+
+  /* Скролл внутри экранов */
+  .app-shell__inner > div {
+    -webkit-overflow-scrolling: touch;
+  }
+
+  ::-webkit-scrollbar { width: 0; height: 0; }
 
   @keyframes slideUp {
     from { transform: translateY(100%); }
@@ -42,17 +132,15 @@
 <body>
   <div id="root"></div>
 
-  <script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
-  <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
-  <script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/react@18.3.1/umd/react.production.min.js" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" crossorigin="anonymous"></script>
 
-  <!-- tokens & shared ui -->
   <script type="text/babel" src="components/tokens.jsx"></script>
   <script type="text/babel" src="components/ui.jsx"></script>
-  <script type="text/babel" src="components/PhoneShell.jsx"></script>
+  <script type="text/babel" src="components/AppShell.jsx"></script>
   <script type="text/babel" src="components/TabBar.jsx"></script>
 
-  <!-- screens -->
   <script type="text/babel" src="components/screens/Onboarding.jsx"></script>
   <script type="text/babel" src="components/screens/OnboardingQ.jsx"></script>
   <script type="text/babel" src="components/screens/Today.jsx"></script>
@@ -62,7 +150,6 @@
   <script type="text/babel" src="components/screens/Profile.jsx"></script>
   <script type="text/babel" src="components/screens/Details.jsx"></script>
 
-  <!-- app root -->
   <script type="text/babel" src="components/AppFinal.jsx"></script>
 </body>
 </html>
