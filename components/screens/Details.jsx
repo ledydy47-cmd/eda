@@ -38,99 +38,147 @@ const DEFAULT_DINNER_RECIPE = {
 
 // ─── Каталог всех рецептов приёма пищи ─────────────
 function MealCatalogSheet({t, pool = [], mealLabel = 'ЗАВТРАК', currentId, onClose, onPreview, onSelect}) {
+  const listRef = React.useRef(null);
+  const [canScrollMore, setCanScrollMore] = React.useState(false);
+  const total = pool.length;
+
+  const updateScrollHint = React.useCallback(() => {
+    const el = listRef.current;
+    if (!el) return;
+    const hasOverflow = el.scrollHeight > el.clientHeight + 4;
+    const atBottom = el.scrollTop + el.clientHeight >= el.scrollHeight - 12;
+    setCanScrollMore(hasOverflow && !atBottom);
+  }, []);
+
+  React.useEffect(() => {
+    updateScrollHint();
+    const el = listRef.current;
+    if (!el) return undefined;
+    el.addEventListener('scroll', updateScrollHint, { passive: true });
+    window.addEventListener('resize', updateScrollHint);
+    return () => {
+      el.removeEventListener('scroll', updateScrollHint);
+      window.removeEventListener('resize', updateScrollHint);
+    };
+  }, [pool.length, updateScrollHint]);
+
   return (
     <div style={{
       position: 'absolute', inset: 0, zIndex: 26,
       display: 'flex', flexDirection: 'column',
-      background: 'rgba(0,0,0,0.45)',
-      animation: 'fadeIn 0.2s',
-    }} onClick={onClose}>
-      <div style={{flex: 1}} onClick={onClose}/>
-      <div onClick={e => e.stopPropagation()} style={{
-        background: t.bg,
-        borderTopLeftRadius: t.radius.xl,
-        borderTopRightRadius: t.radius.xl,
-        padding: '10px 0 0',
-        maxHeight: '92%',
-        animation: 'slideUp 0.3s cubic-bezier(0.2, 0.9, 0.3, 1)',
-        display: 'flex',
-        flexDirection: 'column',
-        minHeight: 0,
+      background: t.bg,
+      animation: 'slideUp 0.25s cubic-bezier(0.2, 0.9, 0.3, 1)',
+      minHeight: 0,
+    }}>
+      <div style={{
+        flexShrink: 0,
+        padding: 'calc(8px + env(safe-area-inset-top, 0px)) 20px 12px',
+        borderBottom: `1px solid ${t.border}`,
+        display: 'flex', alignItems: 'center', gap: 12,
       }}>
-        <div style={{width: 40, height: 4, borderRadius: 2, background: t.borderStrong, margin: '0 auto 12px', flexShrink: 0}}/>
-
-        <div style={{padding: '0 24px 12px', flexShrink: 0}}>
+        <button type="button" onClick={onClose} aria-label="Назад" style={{
+          width: 40, height: 40, borderRadius: 20,
+          background: t.surface, border: `1px solid ${t.border}`,
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          cursor: 'pointer', flexShrink: 0,
+        }}>
+          <Icon name="arrowLeft" size={18}/>
+        </button>
+        <div style={{flex: 1, minWidth: 0}}>
           <div style={{fontFamily: '"JetBrains Mono", monospace', fontSize: 10, color: t.textMuted, letterSpacing: '0.14em'}}>
             КАТАЛОГ · {mealLabel}
           </div>
-          <Display t={t} size={22} style={{marginTop: 6}}>
-            Все рецепты
+          <Display t={t} size={20} style={{marginTop: 4}}>
+            Все рецепты · {total}
           </Display>
-          <p style={{marginTop: 6, fontSize: 13, color: t.textMuted, lineHeight: 1.45}}>
-            {pool.length} вариантов — нажми «Посмотреть», чтобы открыть полный рецепт с фото и шагами.
-          </p>
-        </div>
-
-        <div style={{flex: 1, minHeight: 0, overflow: 'auto', padding: '0 20px 8px', WebkitOverflowScrolling: 'touch'}}>
-          {pool.length === 0 ? (
-            <div style={{padding: 24, textAlign: 'center', color: t.textMuted, fontSize: 14}}>
-              Рецепты ещё загружаются…
-            </div>
-          ) : pool.map(recipe => {
-            const isCurrent = recipe.id === currentId;
-            return (
-              <div key={recipe.id} style={{
-                padding: 14, borderRadius: t.radius.lg,
-                background: isCurrent ? t.accentSoft : t.surface,
-                border: `1px solid ${isCurrent ? t.accent : t.border}`,
-                marginBottom: 10,
-              }}>
-                <div style={{display: 'flex', gap: 12, alignItems: 'center'}}>
-                  <PhotoSlot t={t} w={72} h={72} radius={t.radius.md} label={recipe.tag} tone={recipe.tone} src={recipe.image} alt={recipe.title} style={{flexShrink: 0}}/>
-                  <div style={{flex: 1, minWidth: 0}}>
-                    {isCurrent && (
-                      <div style={{fontSize: 10, fontWeight: 700, color: t.accent, letterSpacing: '0.06em', marginBottom: 4}}>СЕЙЧАС В ПЛАНЕ</div>
-                    )}
-                    <div style={{fontSize: 15, fontWeight: 600, color: t.text, lineHeight: 1.25}}>{recipe.title}</div>
-                    <div style={{fontSize: 12.5, color: t.textMuted, marginTop: 4}}>{recipe.kcal} ккал · {recipe.time}</div>
-                  </div>
-                </div>
-                <div style={{display: 'flex', gap: 8, marginTop: 12}}>
-                  <button onClick={() => onPreview && onPreview(recipe)} style={{
-                    flex: 1.4, padding: '10px 12px', borderRadius: t.radius.md,
-                    background: t.bgSubtle, border: `1px solid ${t.border}`,
-                    color: t.text, fontSize: 13, fontWeight: 600, cursor: 'pointer',
-                    fontFamily: t.fontBody,
-                  }}>
-                    Посмотреть
-                  </button>
-                  {onSelect && (
-                    <button onClick={() => onSelect(recipe)} style={{
-                      flex: 1, padding: '10px 12px', borderRadius: t.radius.md,
-                      background: t.accent, border: 'none',
-                      color: t.accentText, fontSize: 13, fontWeight: 600, cursor: 'pointer',
-                      fontFamily: t.fontBody,
-                    }}>
-                      Выбрать
-                    </button>
-                  )}
-                </div>
-              </div>
-            );
-          })}
-        </div>
-
-        <div style={{padding: '12px 24px calc(16px + env(safe-area-inset-bottom, 0px))', borderTop: `1px solid ${t.border}`, flexShrink: 0}}>
-          <button onClick={onClose} style={{
-            width: '100%', padding: '14px', borderRadius: t.radius.md,
-            background: 'transparent', border: `1.5px solid ${t.border}`,
-            color: t.text, fontSize: 14, fontWeight: 600, cursor: 'pointer',
-            fontFamily: t.fontBody,
-          }}>
-            Закрыть
-          </button>
         </div>
       </div>
+
+      <div style={{padding: '10px 24px 0', flexShrink: 0}}>
+        <p style={{margin: 0, fontSize: 13, color: t.textMuted, lineHeight: 1.45}}>
+          {total > 10
+            ? 'Прокрути список вниз — новые рецепты в конце.'
+            : 'Нажми «Посмотреть», чтобы открыть полный рецепт с фото и шагами.'}
+        </p>
+      </div>
+
+      <div
+        ref={listRef}
+        style={{
+          flex: 1,
+          minHeight: 0,
+          overflowY: 'auto',
+          overscrollBehavior: 'contain',
+          WebkitOverflowScrolling: 'touch',
+          touchAction: 'pan-y',
+          padding: '12px 20px calc(24px + env(safe-area-inset-bottom, 0px))',
+        }}
+      >
+        {total === 0 ? (
+          <div style={{padding: 24, textAlign: 'center', color: t.textMuted, fontSize: 14}}>
+            Рецепты ещё загружаются…
+          </div>
+        ) : pool.map((recipe, index) => {
+          const isCurrent = recipe.id === currentId;
+          return (
+            <div key={recipe.id} style={{
+              padding: 14, borderRadius: t.radius.lg,
+              background: isCurrent ? t.accentSoft : t.surface,
+              border: `1px solid ${isCurrent ? t.accent : t.border}`,
+              marginBottom: 10,
+            }}>
+              <div style={{display: 'flex', gap: 12, alignItems: 'center'}}>
+                <PhotoSlot t={t} w={72} h={72} radius={t.radius.md} label={recipe.tag} tone={recipe.tone} src={recipe.image} alt={recipe.title} style={{flexShrink: 0}}/>
+                <div style={{flex: 1, minWidth: 0}}>
+                  <div style={{fontFamily: '"JetBrains Mono", monospace', fontSize: 10, color: t.textMuted, letterSpacing: '0.06em', marginBottom: 4}}>
+                    {index + 1} / {total}
+                  </div>
+                  {isCurrent && (
+                    <div style={{fontSize: 10, fontWeight: 700, color: t.accent, letterSpacing: '0.06em', marginBottom: 4}}>СЕЙЧАС В ПЛАНЕ</div>
+                  )}
+                  <div style={{fontSize: 15, fontWeight: 600, color: t.text, lineHeight: 1.25}}>{recipe.title}</div>
+                  <div style={{fontSize: 12.5, color: t.textMuted, marginTop: 4}}>{recipe.kcal} ккал · {recipe.time}</div>
+                </div>
+              </div>
+              <div style={{display: 'flex', gap: 8, marginTop: 12}}>
+                <button type="button" onClick={() => onPreview && onPreview(recipe)} style={{
+                  flex: 1.4, padding: '10px 12px', borderRadius: t.radius.md,
+                  background: t.bgSubtle, border: `1px solid ${t.border}`,
+                  color: t.text, fontSize: 13, fontWeight: 600, cursor: 'pointer',
+                  fontFamily: t.fontBody,
+                }}>
+                  Посмотреть
+                </button>
+                {onSelect && (
+                  <button type="button" onClick={() => onSelect(recipe)} style={{
+                    flex: 1, padding: '10px 12px', borderRadius: t.radius.md,
+                    background: t.accent, border: 'none',
+                    color: t.accentText, fontSize: 13, fontWeight: 600, cursor: 'pointer',
+                    fontFamily: t.fontBody,
+                  }}>
+                    Выбрать
+                  </button>
+                )}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+
+      {canScrollMore && (
+        <div style={{
+          position: 'absolute', left: 0, right: 0, bottom: 'calc(12px + env(safe-area-inset-bottom, 0px))',
+          display: 'flex', justifyContent: 'center', pointerEvents: 'none',
+        }}>
+          <div style={{
+            padding: '8px 14px', borderRadius: 999,
+            background: 'rgba(0,0,0,0.72)', color: '#fff',
+            fontSize: 12, fontWeight: 600, letterSpacing: '0.02em',
+          }}>
+            ↓ ещё {Math.max(1, total - 10)} рецептов
+          </div>
+        </div>
+      )}
     </div>
   );
 }

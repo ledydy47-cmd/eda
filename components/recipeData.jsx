@@ -1,6 +1,8 @@
 // Загрузка и нормализация рецептов из JSON
 
-const BREAKFAST_BATCH_URL = 'data/breakfast_regular_300kcal_batch_01.json';
+const BREAKFAST_BATCH_VERSION = 15;
+const BREAKFAST_BATCH_URL = `data/breakfast_regular_300kcal_batch_01.json?v=${BREAKFAST_BATCH_VERSION}`;
+const BREAKFAST_BATCH_EXPECTED = 15;
 
 const MEAL_ORDER = ['breakfast', 'l', 's', 'd'];
 
@@ -334,12 +336,19 @@ function findRecipeById(recipes, id) {
 }
 
 function loadBreakfastRecipes() {
-  return fetch(BREAKFAST_BATCH_URL)
+  return fetch(BREAKFAST_BATCH_URL, { cache: 'no-store' })
     .then(res => {
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       return res.json();
     })
-    .then(data => (data.recipes || []).map(enrichRecipe));
+    .then(data => {
+      const recipes = (data.recipes || []).map(enrichRecipe);
+      const expected = data.total_recipes || BREAKFAST_BATCH_EXPECTED;
+      if (recipes.length < expected) {
+        console.warn(`Загружено ${recipes.length} из ${expected} завтраков — возможно устаревший кэш`);
+      }
+      return recipes;
+    });
 }
 
 function getStoredMealSelection(key, defaultId) {
@@ -515,6 +524,7 @@ function saveMealsDoneState(state) {
 
 window.RecipeData = {
   BREAKFAST_BATCH_URL,
+  BREAKFAST_BATCH_EXPECTED,
   DEFAULT_BREAKFAST_ID: 'breakfast_regular_300kcal_001',
   MEAL_ORDER,
   MEAL_META,

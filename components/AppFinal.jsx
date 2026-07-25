@@ -257,6 +257,7 @@ function FloraeApp() {
         mealsDone={mealsDone}
         breakfastLoading={recipesLoading}
         breakfastCount={breakfastRecipes.length}
+        breakfastExpected={RecipeData.BREAKFAST_BATCH_EXPECTED}
         onToggleMealDone={toggleMealDone}
         onOpenRecipe={openRecipe}
         onReplaceMeal={openReplace}
