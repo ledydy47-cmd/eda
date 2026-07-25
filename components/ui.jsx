@@ -89,6 +89,8 @@ const Icon = ({name, size = 22, stroke = 'currentColor', fill = 'none', sw = 1.7
     moon: <><path d="M20 14A8 8 0 019.5 4a8 8 0 1010.5 10z"/></>,
     sun: <><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.2 4.2l1.4 1.4M18.4 18.4l1.4 1.4M2 12h2M20 12h2M4.2 19.8l1.4-1.4M18.4 5.6l1.4-1.4"/></>,
     apple: <><path d="M12 6c0-2 2-3 3-3s0 3-3 3zM7 8c-2 0-3 2-3 5s2 8 5 8 3-1 3-1 0 1 3 1 5-5 5-8-1-5-3-5-3 1-3 1-1-1-2-1-1 1-2 1-2-1-3-1z"/></>,
+    swap: <><path d="M16 3l4 4-4 4"/><path d="M20 7H4"/><path d="M8 21l-4-4 4-4"/><path d="M4 17h16"/></>,
+    bookmark: <><path d="M6 4h12v16l-6-4-6 4V4z"/></>,
   };
   return <svg {...p}>{paths[name]}</svg>;
 };

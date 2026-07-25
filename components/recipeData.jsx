@@ -98,6 +98,51 @@ function saveMealSelection(key, recipe) {
   }));
 }
 
+function getFavoriteRecipes() {
+  try { return JSON.parse(localStorage.getItem('florae_favorite_recipes') || '[]'); }
+  catch { return []; }
+}
+
+function isFavoriteRecipe(id) {
+  return getFavoriteRecipes().some(r => r.id === id);
+}
+
+function toggleFavoriteRecipe(recipe) {
+  const list = getFavoriteRecipes();
+  const idx = list.findIndex(r => r.id === recipe.id);
+  if (idx >= 0) list.splice(idx, 1);
+  else {
+    list.push({
+      id: recipe.id,
+      title: recipe.name || recipe.title,
+      kcal: recipe.calories || recipe.kcal,
+      meal_type: recipe.meal_type,
+      image: recipe.image || RECIPE_IMAGES[recipe.id] || null,
+    });
+  }
+  localStorage.setItem('florae_favorite_recipes', JSON.stringify(list));
+  return idx < 0;
+}
+
+const DEFAULT_MEALS_DONE = {
+  breakfast: true,
+  l: true,
+  s: false,
+  d: false,
+};
+
+function getMealsDoneState() {
+  try {
+    const saved = JSON.parse(localStorage.getItem('florae_meals_done') || 'null');
+    if (saved && typeof saved === 'object') return { ...DEFAULT_MEALS_DONE, ...saved };
+  } catch { /* ignore */ }
+  return { ...DEFAULT_MEALS_DONE };
+}
+
+function saveMealsDoneState(state) {
+  localStorage.setItem('florae_meals_done', JSON.stringify(state));
+}
+
 window.RecipeData = {
   BREAKFAST_BATCH_URL,
   DEFAULT_BREAKFAST_ID,
@@ -112,4 +157,10 @@ window.RecipeData = {
   loadBreakfastRecipes,
   getStoredMealSelection,
   saveMealSelection,
+  getFavoriteRecipes,
+  isFavoriteRecipe,
+  toggleFavoriteRecipe,
+  getMealsDoneState,
+  saveMealsDoneState,
+  DEFAULT_MEALS_DONE,
 };

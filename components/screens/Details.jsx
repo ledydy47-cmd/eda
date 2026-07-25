@@ -159,6 +159,17 @@ function ReplaceMealSheet({t, currentTitle, currentId, pool = DINNER_RECIPE_POOL
 function MealSheet({t, onClose, onDone, onReplace, onOpenFullRecipe, recipe = DEFAULT_DINNER_RECIPE}) {
   const mealLabel = RecipeData.mealTypeLabel(recipe.meal_type).toUpperCase();
   const tone = RecipeData.getRecipeTone(recipe);
+  const [saved, setSaved] = React.useState(() => RecipeData.isFavoriteRecipe(recipe.id));
+
+  React.useEffect(() => {
+    setSaved(RecipeData.isFavoriteRecipe(recipe.id));
+  }, [recipe.id]);
+
+  const handleToggleFavorite = () => {
+    const isNowSaved = RecipeData.toggleFavoriteRecipe(recipe);
+    setSaved(isNowSaved);
+  };
+
   return (
     <div style={{
       position: 'absolute', inset: 0, zIndex: 20,
@@ -253,9 +264,24 @@ function MealSheet({t, onClose, onDone, onReplace, onOpenFullRecipe, recipe = DE
         </div>
 
         <div style={{padding: '12px 24px calc(20px + env(safe-area-inset-bottom, 0px))', borderTop: `1px solid ${t.border}`, background: t.surface, display: 'flex', gap: 10}}>
-          <Button t={t} variant="secondary" size="lg" style={{flex: '0 0 auto', width: 54, padding: 0}}>
+          <Button t={t} variant="secondary" size="lg" onClick={onClose} style={{flex: '0 0 auto', width: 54, padding: 0}}>
             <Icon name="close" size={20}/>
           </Button>
+          <button
+            type="button"
+            aria-label={saved ? 'Убрать из избранного' : 'Сохранить в избранное'}
+            onClick={handleToggleFavorite}
+            style={{
+              flex: '0 0 auto', width: 54, height: 58,
+              borderRadius: t.radius.lg,
+              background: saved ? t.accentSoft : 'transparent',
+              border: `1.5px solid ${saved ? t.accent + '55' : t.borderStrong}`,
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              cursor: 'pointer', padding: 0,
+            }}
+          >
+            <Icon name="bookmark" size={20} stroke={saved ? t.accent : t.text} fill={saved ? t.accent : 'none'}/>
+          </button>
           <Button t={t} onClick={onDone} icon={<Icon name="check" size={18} sw={2.5}/>} style={{flex: 1}}>
             Съедено
           </Button>
